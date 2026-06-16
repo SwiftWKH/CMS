@@ -1,111 +1,29 @@
 # AGENTS.md
 
-## Project Context
+## Purpose
 
-This repository is a temporary development workspace for Kai Hin's portion of a Distributed Clinic Management System.
+This file defines the working rules for Codex while developing Kai Hin's part of the BrightCare Clinic Management System.
 
-The final implementation will be integrated into a shared NetBeans project with contributions from multiple team members.
+This repository is a temporary development workspace. It does not represent the entire group project. Code from this workspace will later be integrated into a shared NetBeans Java project.
 
-This repository does NOT represent the entire system. It represents Kai Hin's assigned responsibilities within the system.
+## Kai Hin Scope
 
----
-
-# System Overview
-
-Architecture:
-
-```text
-Presentation Layer
-    ↓
-Java RMI
-    ↓
-Application Layer
-    ↓
-External Database API
-    ↓
-Cloud Database
-```
-
-General responsibilities:
-
-```text
-Patient Module
-Receptionist Module
-Doctor Module
-Admin & Security Module
-Database Layer
-```
-
-Kai Hin owns:
-
-```text
-Admin Module
-Authentication
-Authorization
-Reporting
-Security
-```
-
-Assume other modules are being developed by other team members.
-
----
-
-# NetBeans Compatibility Requirement
-
-All generated code will eventually be transferred into a NetBeans Java project.
-
-Do NOT use:
-
-```text
-Spring Boot
-Hibernate
-Lombok
-Gradle-specific features
-Maven-specific plugins
-Dependency Injection frameworks
-Java modules
-Reflection-heavy solutions
-```
-
-Prefer:
-
-```text
-Plain Java
-Java RMI
-Serializable classes
-Standard collections
-Simple package structures
-Explicit constructors
-Explicit getters/setters
-```
-
-Code should be easy to copy into a standard NetBeans project without modification.
-
----
-
-# Current Repository Scope
-
-Generate code ONLY for:
+Generate code only for:
 
 ```text
 AuthService
 PermissionChecker
 SessionManager
 ReportService
-SSL/TLS Utilities
-Admin Module Logic
-```
-
-Allowed support classes:
-
-```text
+SSL/TLS utilities
+Admin module logic
 Security DTOs
 Authentication helpers
 Report generation helpers
 Admin-related utilities
 ```
 
-Do NOT generate:
+Do not generate code for:
 
 ```text
 Patient UI
@@ -119,40 +37,65 @@ Database schema
 External API implementation
 ```
 
-Assume these are owned by other team members.
+Those areas belong to other team members unless the user explicitly asks otherwise.
 
----
+## Required Architecture Flow
 
-# Shared Architecture Rules
-
-The following flow must always be respected:
+All implementation must preserve this flow:
 
 ```text
 Client
-→ ClinicRemoteInterface
-→ ClinicServerImplementation
-→ Service
-→ DAO
-→ Storage API
-→ Cloud Database
+-> ClinicRemoteInterface
+-> ClinicServerImplementation
+-> Service
+-> DAO
+-> External Database API
+-> Cloud Database
 ```
 
 Rules:
 
-1. Clients must never communicate directly with storage.
+1. Clients never communicate directly with storage.
 2. Business logic belongs inside services.
-3. DAO classes handle persistence.
-4. Reports are generated dynamically.
+3. DAO classes handle persistence and external API communication.
+4. Reports are generated dynamically and are not persisted.
 5. Security checks occur in the application layer.
 6. Concurrency handling occurs in the application layer.
 
-Do not invent alternative architectures.
+Do not invent an alternative architecture.
 
----
+## NetBeans Compatibility
 
-# Shared Model Classes
+All generated code must be easy to copy into a standard NetBeans Java project.
 
-Assume these classes already exist:
+Do not use:
+
+```text
+Spring Boot
+Hibernate
+Lombok
+Gradle-specific features
+Maven-specific plugins
+Dependency injection frameworks
+Java modules
+Reflection-heavy solutions
+```
+
+Prefer:
+
+```text
+Plain Java
+Java RMI
+Serializable classes
+Standard collections
+Simple package structures
+Explicit constructors
+Explicit getters and setters
+```
+
+## Shared Artifacts
+
+Assume these shared model classes exist:
 
 ```text
 UserAccount
@@ -163,17 +106,11 @@ ConsultationNote
 Report
 ```
 
-Do not regenerate them unless explicitly requested.
+Do not regenerate duplicate versions unless explicitly requested.
 
-Do not create duplicate versions.
+Assume the shared remote contract exists:
 
----
-
-# Shared Remote Contract
-
-Assume the project contains:
-
-```java
+```text
 ClinicRemoteInterface
 ```
 
@@ -183,23 +120,11 @@ All remote methods use:
 throws RemoteException
 ```
 
-Do not modify method signatures without explicit instruction.
+Do not modify method signatures unless explicitly requested.
 
----
+## Kai Hin Responsibilities
 
-# Kai Hin Responsibilities
-
-## Authentication
-
-Generate components related to:
-
-```text
-Login
-Logout
-Credential Validation
-Session Creation
-Session Termination
-```
+### Authentication
 
 Primary class:
 
@@ -207,22 +132,30 @@ Primary class:
 AuthService
 ```
 
----
-
-## Authorization
-
-Generate components related to:
+Responsibilities:
 
 ```text
-Role Validation
-Permission Checking
-Access Control
+Login
+Logout
+Credential validation
+Session creation
+Session termination
 ```
+
+### Authorization
 
 Primary class:
 
 ```text
 PermissionChecker
+```
+
+Responsibilities:
+
+```text
+Role validation
+Permission checking
+Access control
 ```
 
 Supported roles:
@@ -234,17 +167,7 @@ RECEPTIONIST
 PATIENT
 ```
 
----
-
-## Session Management
-
-Generate components related to:
-
-```text
-Active Sessions
-Session Expiry
-Session Validation
-```
+### Session Management
 
 Primary class:
 
@@ -252,20 +175,17 @@ Primary class:
 SessionManager
 ```
 
-Keep implementations lightweight and suitable for an academic project.
-
----
-
-## Reporting
-
-Generate components related to:
+Responsibilities:
 
 ```text
-Monthly Appointment Reports
-Doctor Consultation Reports
-Patient Visit Summaries
-System Statistics
+Active sessions
+Session expiry
+Session validation
 ```
+
+Keep the implementation lightweight and understandable for an academic project.
+
+### Reporting
 
 Primary class:
 
@@ -273,21 +193,16 @@ Primary class:
 ReportService
 ```
 
-Reports are:
+Responsibilities:
 
 ```text
-Generated
-Returned
-Displayed
+Monthly appointment reports
+Doctor consultation reports
+Patient visit summaries
+System statistics
 ```
 
-Reports are NOT:
-
-```text
-Persisted
-Stored
-Versioned
-```
+Reports are generated, returned, and displayed. Reports are not persisted, stored, or versioned.
 
 Do not create:
 
@@ -299,45 +214,29 @@ ReportTable
 
 unless explicitly instructed.
 
----
+### SSL/TLS Support
 
-## Security
-
-Generate components related to:
+Primary class:
 
 ```text
-Authentication
-Authorization
-SSL/TLS Support
-Secure Communication Utilities
+SSLConfig
 ```
 
-Keep implementations practical and understandable for a university project.
+Keep SSL/TLS utilities practical for Java RMI and suitable for a university project.
 
-Avoid enterprise-grade complexity unless specifically requested.
+## Expected Package Focus
 
----
-
-# Expected Package Structure
-
-Focus only on the packages relevant to Kai Hin's responsibilities:
+Kai Hin implementation should normally land in:
 
 ```text
-service/
-├── AuthService.java
-└── ReportService.java
-
-security/
-├── PermissionChecker.java
-├── SessionManager.java
-└── SSLConfig.java
+src/brightcare/service/AuthService.java
+src/brightcare/service/ReportService.java
+src/brightcare/security/PermissionChecker.java
+src/brightcare/security/SessionManager.java
+src/brightcare/security/SSLConfig.java
 ```
 
-Other packages may exist in the final project but are outside the scope of this repository.
-
----
-
-# Coding Preferences
+## Coding Preferences
 
 Prefer:
 
@@ -346,6 +245,7 @@ Simple Java
 Readable code
 Explicit logic
 Clear class responsibilities
+Small helper classes only when useful
 ```
 
 Avoid:
@@ -357,25 +257,19 @@ Complex design patterns
 Framework dependencies
 ```
 
-If multiple solutions are possible:
+When multiple solutions are possible:
 
-1. Choose the solution most compatible with NetBeans.
-2. Choose the solution easiest for teammates to understand.
-3. Choose the solution easiest to integrate into the final shared project.
+1. Choose the option most compatible with NetBeans.
+2. Choose the option easiest for teammates to understand.
+3. Choose the option easiest to integrate into the final shared project.
 
----
+## Current Development Priority
 
-# Current Development Priority
-
-Priority Order:
-
-```text
-1. AuthService
-2. PermissionChecker
-3. SessionManager
-4. ReportService
-5. SSL/TLS Utilities
-6. RMI Integration
-```
+1. `AuthService`
+2. `PermissionChecker`
+3. `SessionManager`
+4. `ReportService`
+5. `SSLConfig`
+6. RMI integration
 
 When uncertain, prioritize Kai Hin's assigned responsibilities over other project components.

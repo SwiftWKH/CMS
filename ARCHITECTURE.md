@@ -1,29 +1,23 @@
-# ARCHITECTURE.md
-
 # Clinic Management System Architecture
 
-## 1. Architecture Overview
+## 1. Overview
 
-The system follows a three-tier distributed architecture.
+The system follows a three-tier distributed architecture using Java RMI.
 
 ```text
 Presentation Layer
-→ Java RMI
-→ Application Layer
-→ DAO Layer
-→ External Database API
-→ Cloud Database
+-> Java RMI
+-> Application Layer
+-> DAO Layer
+-> External Database API
+-> Cloud Database
 ```
 
-The system uses Java RMI for communication between clients and the centralized server.
+Clients communicate with the centralized server through Java RMI. Clients do not access the database or external storage API directly.
 
-Clients do not access the database directly.
+## 2. Layers
 
----
-
-## 2. Three-Tier Layers
-
-## Presentation Layer
+### Presentation Layer
 
 Client programs:
 
@@ -52,9 +46,7 @@ Security decisions
 Concurrency control
 ```
 
----
-
-## Application Layer
+### Application Layer
 
 Main components:
 
@@ -62,10 +54,10 @@ Main components:
 RMI Registry
 ClinicRemoteInterface
 ClinicServerImplementation
-Service Classes
-Security Classes
-Concurrency Classes
-DAO Classes
+Service classes
+Security classes
+Concurrency classes
+DAO classes
 ```
 
 Responsibilities:
@@ -80,26 +72,20 @@ Call DAO classes
 Return results to clients
 ```
 
----
+### Data Layer
 
-## Data Layer
-
-The data layer uses an external cloud database accessed through an API.
-
-Storage communication uses JSON payloads.
+The data layer uses an external cloud database accessed through an API. Storage communication uses JSON payloads.
 
 ```text
 DAO
-→ JSON Payload
-→ External Database API
-→ Cloud Database
+-> JSON Payload
+-> External Database API
+-> Cloud Database
 ```
 
----
+## 3. Application Components
 
-# 3. Application Layer Components
-
-## RMI Registry
+### RMI Registry
 
 Started by:
 
@@ -120,14 +106,12 @@ Example service name:
 ClinicService
 ```
 
----
+### ClinicRemoteInterface
 
-## ClinicRemoteInterface
-
-Located in:
+Location:
 
 ```text
-remote/ClinicRemoteInterface.java
+src/brightcare/remote/ClinicRemoteInterface.java
 ```
 
 Purpose:
@@ -137,14 +121,12 @@ Defines all remote methods available to clients
 Acts as the shared RMI contract
 ```
 
----
+### ClinicServerImplementation
 
-## ClinicServerImplementation
-
-Located in:
+Location:
 
 ```text
-server/ClinicServerImplementation.java
+src/brightcare/server/ClinicServerImplementation.java
 ```
 
 Purpose:
@@ -155,14 +137,12 @@ Receives remote calls
 Delegates work to service classes
 ```
 
----
+### Service Layer
 
-## Service Layer
-
-Located in:
+Location:
 
 ```text
-service/
+src/brightcare/service/
 ```
 
 Services:
@@ -184,14 +164,12 @@ Role checks
 Coordination between DAOs
 ```
 
----
+### DAO Layer
 
-## DAO Layer
-
-Located in:
+Location:
 
 ```text
-dao/
+src/brightcare/dao/
 ```
 
 DAOs:
@@ -210,67 +188,59 @@ Purpose:
 Save data
 Update data
 Fetch data
-Delete/deactivate data
+Delete or deactivate data
 Construct JSON payloads
 Communicate with external database APIs
 Parse API responses
 ```
 
-## Canonical Package Structure
+DAO classes are responsible for converting Java objects into JSON payloads and communicating with the external database API.
+
+## 4. Canonical Package Structure
 
 ```text
 src/
-└── brightcare/
-    ├── model/
-    │   ├── UserAccount.java
-    │   ├── Patient.java
-    │   ├── Doctor.java
-    │   ├── Appointment.java
-    │   ├── ConsultationNote.java
-    │   └── Report.java
-    │
-    ├── remote/
-    │   └── ClinicRemoteInterface.java
-    │
-    ├── server/
-    │   ├── ClinicServer.java
-    │   └── ClinicServerImplementation.java
-    │
-    ├── service/
-    │   ├── AuthService.java
-    │   ├── PatientService.java
-    │   ├── ReceptionistService.java
-    │   ├── DoctorService.java
-    │   └── ReportService.java
-    │
-    ├── dao/
-    │   ├── UserAccountDAO.java
-    │   ├── PatientDAO.java
-    │   ├── DoctorDAO.java
-    │   ├── AppointmentDAO.java
-    │   └── ConsultationNoteDAO.java
-    │
-    ├── security/
-    │   ├── PermissionChecker.java
-    │   ├── SessionManager.java
-    │   └── SSLConfig.java
-    │
-    ├── concurrency/
-    │   └── AppointmentLockManager.java
-    │
-    └── client/
-        ├── patient/
-        ├── receptionist/
-        ├── doctor/
-        └── admin/
+    brightcare/
+        model/
+            UserAccount.java
+            Patient.java
+            Doctor.java
+            Appointment.java
+            ConsultationNote.java
+            Report.java
+        remote/
+            ClinicRemoteInterface.java
+        server/
+            ClinicServer.java
+            ClinicServerImplementation.java
+        service/
+            AuthService.java
+            PatientService.java
+            ReceptionistService.java
+            DoctorService.java
+            ReportService.java
+        dao/
+            UserAccountDAO.java
+            PatientDAO.java
+            DoctorDAO.java
+            AppointmentDAO.java
+            ConsultationNoteDAO.java
+        security/
+            PermissionChecker.java
+            SessionManager.java
+            SSLConfig.java
+        concurrency/
+            AppointmentLockManager.java
+        client/
+            patient/
+            receptionist/
+            doctor/
+            admin/
 ```
 
-DAO classes are responsible for converting Java objects into JSON payloads and communicating with the external database API.
+## 5. Core Entities
 
-
-# 4. Core Entities
-
-## UserAccount
+### UserAccount
 
 ```java
 int userId;
@@ -280,9 +250,7 @@ String role;
 String status;
 ```
 
----
-
-## Patient
+### Patient
 
 ```java
 int patientId;
@@ -294,9 +262,7 @@ String contactNumber;
 String medicalRecordId;
 ```
 
----
-
-## Doctor
+### Doctor
 
 ```java
 int doctorId;
@@ -306,9 +272,7 @@ String specialization;
 String contactNumber;
 ```
 
----
-
-## Appointment
+### Appointment
 
 ```java
 int appointmentId;
@@ -328,9 +292,7 @@ CANCELLED
 COMPLETED
 ```
 
----
-
-## ConsultationNote
+### ConsultationNote
 
 ```java
 int noteId;
@@ -342,9 +304,7 @@ String prescription;
 LocalDateTime createdAt;
 ```
 
----
-
-## Report
+### Report
 
 ```java
 String reportType;
@@ -352,13 +312,9 @@ String content;
 LocalDateTime generatedAt;
 ```
 
-Report is generated only.
+Reports are generated only. They are not persisted.
 
-It is not persisted.
-
----
-
-# 5. Persistent Objects
+## 6. Persistence Rules
 
 Stored objects:
 
@@ -376,81 +332,67 @@ Not stored:
 Report
 ```
 
----
+## 7. Method Contract
 
-# 6. Method Contract
+### Auth
 
-## Auth
+| Method | Parameters | Return Type |
+| --- | --- | --- |
+| `login` | `String username, String password` | `UserAccount` |
+| `logout` | `int userId` | `boolean` |
+| `checkPermission` | `int userId, String requiredRole` | `boolean` |
 
-| Method            | Parameters                         | Return Type   |
-| ----------------- | ---------------------------------- | ------------- |
-| `login`           | `String username, String password` | `UserAccount` |
-| `logout`          | `int userId`                       | `boolean`     |
-| `checkPermission` | `int userId, String requiredRole`  | `boolean`     |
+### Receptionist
 
----
+| Method | Parameters | Return Type |
+| --- | --- | --- |
+| `registerPatient` | `Patient patient` | `Patient` |
+| `updatePatientDetails` | `Patient patient` | `Patient` |
+| `createAppointment` | `Appointment appointment` | `Appointment` |
+| `modifyAppointment` | `Appointment appointment` | `Appointment` |
+| `cancelAppointment` | `int appointmentId` | `Appointment` |
+| `viewAppointmentSchedule` | `LocalDate date` | `List<Appointment>` |
 
-## Receptionist
+### Patient
 
-| Method                    | Parameters                | Return Type         |
-| ------------------------- | ------------------------- | ------------------- |
-| `registerPatient`         | `Patient patient`         | `Patient`           |
-| `updatePatientDetails`    | `Patient patient`         | `Patient`           |
-| `createAppointment`       | `Appointment appointment` | `Appointment`       |
-| `modifyAppointment`       | `Appointment appointment` | `Appointment`       |
-| `cancelAppointment`       | `int appointmentId`       | `Appointment`       |
-| `viewAppointmentSchedule` | `LocalDate date`          | `List<Appointment>` |
+| Method | Parameters | Return Type |
+| --- | --- | --- |
+| `updatePersonalInfo` | `Patient patient` | `Patient` |
+| `bookAppointment` | `Appointment appointment` | `Appointment` |
+| `cancelAppointment` | `int appointmentId` | `Appointment` |
+| `viewAppointmentSchedule` | `int patientId` | `List<Appointment>` |
+| `viewAppointmentHistory` | `int patientId` | `List<Appointment>` |
+| `checkDoctorAvailability` | `int doctorId, LocalDate date` | `List<LocalTime>` |
 
----
+### Doctor
 
-## Patient
+| Method | Parameters | Return Type |
+| --- | --- | --- |
+| `viewAppointmentList` | `int doctorId, LocalDate date` | `List<Appointment>` |
+| `viewMedicalHistory` | `int patientId` | `List<ConsultationNote>` |
+| `updateConsultationNotes` | `ConsultationNote note` | `ConsultationNote` |
+| `manageAppointmentSchedule` | `int doctorId, LocalDate date, List<LocalTime> availableSlots` | `List<LocalTime>` |
 
-| Method                    | Parameters                     | Return Type         |
-| ------------------------- | ------------------------------ | ------------------- |
-| `updatePersonalInfo`      | `Patient patient`              | `Patient`           |
-| `bookAppointment`         | `Appointment appointment`      | `Appointment`       |
-| `cancelAppointment`       | `int appointmentId`            | `Appointment`       |
-| `viewAppointmentSchedule` | `int patientId`                | `List<Appointment>` |
-| `viewAppointmentHistory`  | `int patientId`                | `List<Appointment>` |
-| `checkDoctorAvailability` | `int doctorId, LocalDate date` | `List<LocalTime>`   |
+### Admin / Report
 
----
+| Method | Parameters | Return Type |
+| --- | --- | --- |
+| `generateMonthlyAppointmentReport` | `int month, int year` | `Report` |
+| `generateDoctorConsultationReport` | `int doctorId, int month, int year` | `Report` |
+| `generatePatientVisitSummary` | `int patientId` | `Report` |
+| `viewSystemStatistics` | none | `String` |
 
-## Doctor
+## 8. Team Responsibility
 
-| Method                      | Parameters                                                     | Return Type              |
-| --------------------------- | -------------------------------------------------------------- | ------------------------ |
-| `viewAppointmentList`       | `int doctorId, LocalDate date`                                 | `List<Appointment>`      |
-| `viewMedicalHistory`        | `int patientId`                                                | `List<ConsultationNote>` |
-| `updateConsultationNotes`   | `ConsultationNote note`                                        | `ConsultationNote`       |
-| `manageAppointmentSchedule` | `int doctorId, LocalDate date, List<LocalTime> availableSlots` | `List<LocalTime>`        |
+| Member | Main Responsibility |
+| --- | --- |
+| Tiong | Database layer, DAO, storage API integration |
+| Leon | Patient module, RMI contract maintenance |
+| Amir | Doctor module, concurrency implementation |
+| Kai | Admin module, reporting, authentication, authorization, session management, SSL/TLS |
+| Chen | Receptionist module, testing, reliability, integration validation |
 
----
-
-## Admin / Report
-
-| Method                             | Parameters                          | Return Type |
-| ---------------------------------- | ----------------------------------- | ----------- |
-| `generateMonthlyAppointmentReport` | `int month, int year`               | `Report`    |
-| `generateDoctorConsultationReport` | `int doctorId, int month, int year` | `Report`    |
-| `generatePatientVisitSummary`      | `int patientId`                     | `Report`    |
-| `viewSystemStatistics`             | `none`                              | `String`    |
-
----
-
-# 7. Team Responsibility
-
-| Member | Main Responsibility                                               |
-| ------ | ----------------------------------------------------------------- |
-| Tiong  | Database layer, DAO, storage API integration                      |
-| Leon   | Patient module, RMI contract maintenance                          |
-| Amir   | Doctor module, concurrency implementation                         |
-| Kai    | Admin module, reporting, authentication, authorization, session management, SSL/TLS
-| Chen   | Receptionist module, testing, reliability, integration validation |
-
----
-
-# 8. Development Order
+## 9. Development Order
 
 1. Shared model classes
 2. RMI interface
@@ -461,58 +403,40 @@ Report
 7. Security handling
 8. Integration testing
 
----
-
-# 9. Demo Deployment
+## 10. Demo Deployment
 
 Basic demo setup:
 
 ```text
-Laptop 1:
-RMI Server + Application Layer + Storage API access
-
-Laptop 2:
-Patient Client
-
-Laptop 3:
-Doctor Client
-
-Laptop 4:
-Receptionist Client
-
-Laptop 5:
-Admin Client
+Laptop 1: RMI Server + Application Layer + Storage API access
+Laptop 2: Patient Client
+Laptop 3: Doctor Client
+Laptop 4: Receptionist Client
+Laptop 5: Admin Client
 ```
 
 Advanced demo setup:
 
 ```text
-Laptop 1:
-Cloud/external DB access
-
-Laptop 2:
-RMI Server
-
-Laptop 3-5:
-Client modules
+Laptop 1: Cloud/external DB access
+Laptop 2: RMI Server
+Laptop 3-5: Client modules
 ```
 
 Fallback should be the basic demo setup.
 
----
-
-# 10. Final Architecture Rule
+## 11. Final Architecture Rule
 
 All modules must follow this flow:
 
 ```text
 Client UI
-→ ClinicRemoteInterface
-→ ClinicServerImplementation
-→ Service
-→ DAO
-→ External Database API
-→ Cloud Database
+-> ClinicRemoteInterface
+-> ClinicServerImplementation
+-> Service
+-> DAO
+-> External Database API
+-> Cloud Database
 ```
 
-Any implementation that bypasses this flow is considered incompatible with the project architecture.
+Any implementation that bypasses this flow is incompatible with the project architecture.
