@@ -59,6 +59,25 @@ src/brightcare/
         admin/
 ```
 
+## IDE Setup
+
+Open this repository root directly in both tools:
+
+```text
+NetBeans: Open Project -> this CMS folder
+VS Code:  Open Folder -> this CMS folder
+```
+
+The NetBeans Ant project files live at the repository root:
+
+```text
+build.xml
+manifest.mf
+nbproject/
+```
+
+Do not create or open a second nested NetBeans project inside this folder.
+
 ## Kai Hin Development Priority
 
 1. `AuthService`
