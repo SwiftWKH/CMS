@@ -37,6 +37,15 @@ Call remote RMI methods
 Display server responses
 ```
 
+UI structure:
+
+```text
+Swing JFrame view
+-> module controller
+-> RMI/authentication gateway
+-> ClinicRemoteInterface
+```
+
 Not responsible for:
 
 ```text
@@ -232,13 +241,91 @@ src/
         concurrency/
             AppointmentLockManager.java
         client/
+            gateway/
+                AuthenticationGateway.java
+                AdminGateway.java
+                RmiAuthenticationGateway.java
+                RmiAdminGateway.java
+                UserSummary.java
+                SessionSummary.java
+            common/
+                CommonClient.java
+                controller/
+                    LoginController.java
+                    NavigationController.java
+                view/
+                    LoginFrame.java
+                    LoginFrame.form
+                    MainMenuFrame.java
+                    MainMenuFrame.form
+                    AccessDeniedDialog.java
+                    AccessDeniedDialog.form
+                    SessionExpiredDialog.java
+                    SessionExpiredDialog.form
             patient/
+                PatientClient.java
+                controller/
+                    PatientController.java
+                view/
+                    PatientFrame.java
+                    PatientFrame.form
             receptionist/
+                ReceptionistClient.java
+                controller/
+                    ReceptionistController.java
+                view/
+                    ReceptionistFrame.java
+                    ReceptionistFrame.form
             doctor/
+                DoctorClient.java
+                controller/
+                    DoctorController.java
+                view/
+                    DoctorFrame.java
+                    DoctorFrame.form
             admin/
+                AdminClient.java
+                controller/
+                    AdminController.java
+                view/
+                    AdminFrame.java
+                    AdminFrame.form
+                    CreateUserFrame.java
+                    CreateUserFrame.form
+                    ViewUsersFrame.java
+                    ViewUsersFrame.form
+                    DisableUserFrame.java
+                    DisableUserFrame.form
+                    MonthlyAppointmentReportFrame.java
+                    MonthlyAppointmentReportFrame.form
+                    DoctorConsultationReportFrame.java
+                    DoctorConsultationReportFrame.form
+                    PatientVisitSummaryFrame.java
+                    PatientVisitSummaryFrame.form
+                    SystemStatisticsFrame.java
+                    SystemStatisticsFrame.form
+                    ActiveSessionsFrame.java
+                    ActiveSessionsFrame.form
 ```
 
+Client package rules:
+
+```text
+*Client.java       Starts the module UI
+controller/*.java Coordinates UI events and RMI calls
+view/*Frame.java  NetBeans/Swing JFrame logic shell
+view/*Frame.form  NetBeans GUI Builder metadata
+```
+
+Each JFrame must keep its `.java` and `.form` pair with the same base name. Controllers may call `ClinicRemoteInterface` or small gateway interfaces that will be backed by RMI. JFrame classes should not contain database logic, service logic, direct service calls, or direct storage access.
+
+Shared screens that are not tied to one user role belong in `client/common`.
+
+Gateway classes in `client/gateway` isolate Swing controllers from RMI lookup and remote exceptions. Client code must not instantiate server-side service classes directly.
+
 ## 5. Core Entities
+
+The field lists in this section must match `Contract Table.xlsx`.
 
 ### UserAccount
 
@@ -307,9 +394,11 @@ LocalDateTime createdAt;
 ### Report
 
 ```java
+int reportId;
 String reportType;
-String content;
+int generatedBy;
 LocalDateTime generatedAt;
+String filePath;
 ```
 
 Reports are generated only. They are not persisted.
@@ -332,7 +421,35 @@ Not stored:
 Report
 ```
 
-## 7. Method Contract
+## 7. Local Testing Boundary
+
+Production architecture must not be changed just to support local testing.
+
+Use this boundary:
+
+```text
+src/        Production application code
+test/       Optional test harness code
+local/      Ignored local-only files
+mock-data/  Ignored fake API/database payloads
+sandbox/    Ignored experiments
+```
+
+Local mock data can be used to test Kai's features before the DAO layer and teammate modules are ready, but production classes should not depend directly on mock-only classes or files.
+
+Recommended pattern:
+
+```text
+Service
+-> constructor parameter or simple collaborator interface
+-> real DAO later, mock collaborator in tests
+```
+
+This keeps Kai's module testable without exporting fake out-of-scope data to teammates.
+
+## 8. Method Contract
+
+The method names, parameters, and return types in this section must match `Contract Table.xlsx`.
 
 ### Auth
 
@@ -382,7 +499,7 @@ Report
 | `generatePatientVisitSummary` | `int patientId` | `Report` |
 | `viewSystemStatistics` | none | `String` |
 
-## 8. Team Responsibility
+## 9. Team Responsibility
 
 | Member | Main Responsibility |
 | --- | --- |
@@ -392,7 +509,7 @@ Report
 | Kai | Admin module, reporting, authentication, authorization, session management, SSL/TLS |
 | Chen | Receptionist module, testing, reliability, integration validation |
 
-## 9. Development Order
+## 10. Development Order
 
 1. Shared model classes
 2. RMI interface
@@ -403,7 +520,7 @@ Report
 7. Security handling
 8. Integration testing
 
-## 10. Demo Deployment
+## 11. Demo Deployment
 
 Basic demo setup:
 
@@ -425,7 +542,7 @@ Laptop 3-5: Client modules
 
 Fallback should be the basic demo setup.
 
-## 11. Final Architecture Rule
+## 12. Final Architecture Rule
 
 All modules must follow this flow:
 

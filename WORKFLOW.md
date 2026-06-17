@@ -22,6 +22,26 @@ ClinicRemoteInterface
 
 Changes to these artifacts must be communicated to the team before integration.
 
+## Contract Table
+
+`Contract Table.xlsx` is the team source of truth for:
+
+```text
+Ownership
+Shared data fields
+Method signatures
+Return types
+Remote interface expectations
+```
+
+Before merge:
+
+```text
+[ ] Shared model fields match Contract Table.xlsx
+[ ] Method names, parameters, and return types match Contract Table.xlsx
+[ ] Any contract changes were communicated to the team
+```
+
 ## Ownership
 
 | Member | Ownership |
@@ -78,6 +98,9 @@ Before merge:
 [ ] No duplicate remote interfaces
 [ ] No direct database access from clients
 [ ] No business logic in GUI classes
+[ ] JFrame screens delegate to controller classes
+[ ] Client controllers do not directly construct server-side service classes
+[ ] Client gateway classes are the only client-side RMI adapters
 [ ] Method signatures match the contract
 [ ] Architecture flow is preserved
 ```
@@ -92,3 +115,112 @@ Client
 -> External API
 -> Database
 ```
+
+## NetBeans UI Structure
+
+Each client module should follow the same Swing package shape:
+
+```text
+client/<module>/
+    <Module>Client.java
+    controller/
+        <Module>Controller.java
+    view/
+        <Module>Frame.java
+        <Module>Frame.form
+```
+
+JFrame classes are for UI only. NetBeans GUI Builder screens must keep the `.java` and `.form` pair with the same base name. Controllers coordinate UI events and RMI calls. Business rules stay on the server side.
+
+Client gateway classes live in `client/gateway`. They adapt controllers to `ClinicRemoteInterface` and keep RMI details out of Swing frames.
+
+Shared screens use:
+
+```text
+client/common/
+    CommonClient.java
+    controller/
+        LoginController.java
+        NavigationController.java
+    view/
+        LoginFrame.java
+        LoginFrame.form
+        MainMenuFrame.java
+        MainMenuFrame.form
+        AccessDeniedDialog.java
+        AccessDeniedDialog.form
+        SessionExpiredDialog.java
+        SessionExpiredDialog.form
+```
+
+## Local Mock Data Workflow
+
+Kai may use fake out-of-scope data while developing authentication, authorization, reporting, session management, and security features.
+
+Use this rule:
+
+```text
+Tracked and exported: src/, docs, NetBeans project files
+Optional tracked tests: test/
+Ignored local data: local/, mock-data/, sandbox/
+```
+
+Before sharing or merging:
+
+```text
+[ ] No fake records are hardcoded into production services
+[ ] No production class imports mock-only classes
+[ ] No local mock payloads are included in the handoff
+[ ] Services can later swap mock collaborators for real DAO/API collaborators
+```
+
+## Export Workflow
+
+Exports are puzzle-piece handoffs, not full workspace snapshots.
+
+Default export contents:
+
+```text
+Implementation files for the included component tags
+NetBeans .java/.form pairs for included UI screens
+Required controllers and RMI gateway adapters
+Minimal shared model/remote/server skeletons needed to compile
+build.xml
+manifest.mf
+nbproject/ without nbproject/private/
+.gitignore and .gitattributes
+```
+
+Always exclude:
+
+```text
+Documentation files
+Diagrams and images
+Spreadsheets
+test/
+local/
+mock-data/
+sandbox/
+build/
+dist/
+.class files
+.git/
+nbproject/private/
+Unincluded teammate modules
+```
+
+Use bracketed component tags in the zip name:
+
+```text
+CMS-[Admin].zip
+CMS-[Admin][Receptionist].zip
+CMS-[Admin][Receptionist][Doctor][Patient].zip
+```
+
+For Kai's current standalone handoff, use:
+
+```text
+CMS-[Admin].zip
+```
+
+When teammate modules are integrated later, add their tags only after their source files are intentionally included in the export.

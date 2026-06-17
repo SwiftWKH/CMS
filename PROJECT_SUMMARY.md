@@ -21,6 +21,8 @@ Rules:
 
 ## Core Entities
 
+Shared model fields must match `Contract Table.xlsx`.
+
 ### UserAccount
 
 ```java
@@ -80,9 +82,11 @@ LocalDateTime createdAt;
 ### Report
 
 ```java
+int reportId;
 String reportType;
-String content;
+int generatedBy;
 LocalDateTime generatedAt;
+String filePath;
 ```
 
 Reports are generated only.
@@ -124,6 +128,54 @@ DAO
 -> JSON Payload
 -> External Database API
 -> Cloud Database
+```
+
+## Local Testing Boundary
+
+Kai's module may use mock data before teammate-owned modules are ready.
+
+Allowed local-only locations:
+
+```text
+test/
+local/
+mock-data/
+sandbox/
+```
+
+Rules:
+
+1. Production code belongs in `src/`.
+2. Mock payloads belong in ignored local folders.
+3. Production services should use replaceable collaborators instead of directly depending on mock classes.
+4. Local mock data is not part of the teammate handoff.
+
+## Export Boundary
+
+Default exports are implementation-only puzzle pieces. Include only the selected component implementation, NetBeans `.java/.form` pairs, required controllers/gateways, minimal compile skeletons, and minimal NetBeans/Git recognition files.
+
+Exclude:
+
+```text
+docs
+diagrams
+spreadsheets
+test/
+local/
+mock-data/
+sandbox/
+build/
+dist/
+.class files
+unselected teammate modules
+```
+
+Zip naming:
+
+```text
+CMS-[Admin].zip
+CMS-[Admin][Receptionist].zip
+CMS-[Admin][Receptionist][Doctor][Patient].zip
 ```
 
 ## Service Layer
@@ -219,7 +271,65 @@ src/brightcare/
         DoctorDAO.java
         AppointmentDAO.java
         ConsultationNoteDAO.java
+    client/
+        gateway/
+            AuthenticationGateway.java
+            AdminGateway.java
+            RmiAuthenticationGateway.java
+            RmiAdminGateway.java
+            UserSummary.java
+            SessionSummary.java
+        common/
+            CommonClient.java
+            controller/LoginController.java
+            controller/NavigationController.java
+            view/LoginFrame.java
+            view/LoginFrame.form
+            view/MainMenuFrame.java
+            view/MainMenuFrame.form
+            view/AccessDeniedDialog.java
+            view/AccessDeniedDialog.form
+            view/SessionExpiredDialog.java
+            view/SessionExpiredDialog.form
+        admin/
+            AdminClient.java
+            controller/AdminController.java
+            view/AdminFrame.java
+            view/AdminFrame.form
+            view/CreateUserFrame.java
+            view/CreateUserFrame.form
+            view/ViewUsersFrame.java
+            view/ViewUsersFrame.form
+            view/DisableUserFrame.java
+            view/DisableUserFrame.form
+            view/MonthlyAppointmentReportFrame.java
+            view/MonthlyAppointmentReportFrame.form
+            view/DoctorConsultationReportFrame.java
+            view/DoctorConsultationReportFrame.form
+            view/PatientVisitSummaryFrame.java
+            view/PatientVisitSummaryFrame.form
+            view/SystemStatisticsFrame.java
+            view/SystemStatisticsFrame.form
+            view/ActiveSessionsFrame.java
+            view/ActiveSessionsFrame.form
+        patient/
+            PatientClient.java
+            controller/PatientController.java
+            view/PatientFrame.java
+            view/PatientFrame.form
+        doctor/
+            DoctorClient.java
+            controller/DoctorController.java
+            view/DoctorFrame.java
+            view/DoctorFrame.form
+        receptionist/
+            ReceptionistClient.java
+            controller/ReceptionistController.java
+            view/ReceptionistFrame.java
+            view/ReceptionistFrame.form
 ```
+
+Client UI classes use NetBeans-compatible Swing `JFrame` screens with paired `.form` files and controller classes. UI classes must not contain business rules or direct database/storage access.
 
 ## Team Ownership
 

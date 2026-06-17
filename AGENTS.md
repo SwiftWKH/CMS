@@ -39,6 +39,8 @@ External API implementation
 
 Those areas belong to other team members unless the user explicitly asks otherwise.
 
+Exception: project-wide UI skeletons may be created when the user requests structure changes. For out-of-scope modules, create only empty or minimal compilable NetBeans/Swing shells such as `*Client`, `controller/*Controller`, and paired `view/*Frame.java` plus `view/*Frame.form`. Do not add module-specific UI behavior or business logic for other members.
+
 ## Required Architecture Flow
 
 All implementation must preserve this flow:
@@ -93,6 +95,31 @@ Explicit constructors
 Explicit getters and setters
 ```
 
+For GUI structure, prefer plain Swing classes compatible with NetBeans:
+
+```text
+JFrame screens in view packages
+Paired .java and .form files for NetBeans GUI Builder screens
+Controller classes in controller packages
+No business logic inside JFrame classes
+No direct database/storage access from UI classes
+No direct client calls to server-side service classes
+```
+
+Shared login/navigation/session screens belong under:
+
+```text
+src/brightcare/client/common/
+```
+
+Client-to-server adapter interfaces and RMI implementations belong under:
+
+```text
+src/brightcare/client/gateway/
+```
+
+Gateways may call `ClinicRemoteInterface`. Swing frames and controllers must not instantiate server-side services directly.
+
 ## Shared Artifacts
 
 Assume these shared model classes exist:
@@ -121,6 +148,23 @@ throws RemoteException
 ```
 
 Do not modify method signatures unless explicitly requested.
+
+## Contract Table Rule
+
+`Contract Table.xlsx` is the source of truth for:
+
+```text
+Team responsibility
+Shared model fields
+Java data types
+ClinicRemoteInterface method names
+Method parameters
+Method return types
+```
+
+Before editing shared models or remote-facing methods, check the contract table. If older docs conflict with the spreadsheet, follow the spreadsheet and update the docs/code to match.
+
+Do not add fields to shared model classes unless the field exists in `Contract Table.xlsx` or the user explicitly confirms a team-approved contract change.
 
 ## Kai Hin Responsibilities
 
@@ -235,6 +279,73 @@ src/brightcare/security/PermissionChecker.java
 src/brightcare/security/SessionManager.java
 src/brightcare/security/SSLConfig.java
 ```
+
+## Local Testing and Mock Data
+
+Kai's module may need out-of-scope data to test authentication, authorization, reports, and session behavior before other teammates finish their modules.
+
+Use this separation:
+
+```text
+src/        Production source code and teammate handoff code
+test/       Optional test harness code
+local/      Ignored local scratch files and fake datasets
+mock-data/  Ignored local mock API/database payloads
+sandbox/    Ignored experiments
+```
+
+Rules:
+
+1. Do not put fake database records directly in `src/`.
+2. Do not make production classes depend on mock-only classes.
+3. Keep local fake payloads in ignored folders.
+4. Use constructor parameters or simple interfaces when production services need replaceable data access.
+5. Keep production code compatible with real DAO/API collaborators later.
+6. Before handoff, verify Kai's export does not include `local/`, `mock-data/`, or `sandbox/`.
+
+## Teammate Export Rule
+
+When the user asks for an export, default to an implementation-only puzzle-piece export unless the user says otherwise.
+
+Export only the code that teammates need to integrate Kai's current piece:
+
+```text
+Kai-owned implementation files
+NetBeans .java/.form UI pairs for Kai-owned screens
+Client controllers and gateways needed by Kai's screens
+Minimal shared model, remote, or server skeletons required for compilation
+Minimal NetBeans project recognition files
+Minimal Git recognition files
+```
+
+Do not include:
+
+```text
+docs
+diagrams
+spreadsheets
+test/
+local/
+mock-data/
+sandbox/
+build/
+dist/
+.class files
+nbproject/private/
+other teammate modules unless they are explicitly part of the integrated component set
+```
+
+The export should allow teammates to copy Kai's piece into the shared NetBeans project without working around local-only files, mock data, or unrelated module scaffolding.
+
+Use this zip naming convention:
+
+```text
+CMS-[Admin].zip
+CMS-[Admin][Receptionist].zip
+CMS-[Admin][Receptionist][Doctor][Patient].zip
+```
+
+Bracket tags identify which user-facing components are included in that export. Add tags only for components that are actually included and integration-ready.
 
 ## Coding Preferences
 
