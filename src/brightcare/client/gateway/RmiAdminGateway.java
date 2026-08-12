@@ -1,6 +1,8 @@
 package brightcare.client.gateway;
 
+import brightcare.model.ActiveSessionInfo;
 import brightcare.model.Report;
+import brightcare.model.UserAccount;
 import brightcare.remote.ClinicRemoteInterface;
 import java.rmi.RemoteException;
 import java.time.LocalDateTime;
@@ -18,15 +20,32 @@ public class RmiAdminGateway implements AdminGateway {
     }
 
     public List<UserSummary> getUsers() {
-        return new ArrayList<UserSummary>();
+        List<UserSummary> users = new ArrayList<UserSummary>();
+        try {
+            List<UserAccount> accounts = remote.viewUsers();
+            for (UserAccount account : accounts) {
+                users.add(new UserSummary(account.getUsername(), account.getRole(), account.getStatus()));
+            }
+        } catch (RemoteException ex) {
+            return users;
+        }
+        return users;
     }
 
     public boolean createUser(String username, String password, String role) {
-        return false;
+        try {
+            return remote.createUser(username, password, role) != null;
+        } catch (RemoteException ex) {
+            return false;
+        }
     }
 
     public boolean disableUser(String username) {
-        return false;
+        try {
+            return remote.disableUser(username);
+        } catch (RemoteException ex) {
+            return false;
+        }
     }
 
     public Report generateMonthlyAppointmentReport(int month, int year) {
@@ -62,7 +81,20 @@ public class RmiAdminGateway implements AdminGateway {
     }
 
     public List<SessionSummary> getActiveSessions() {
-        return new ArrayList<SessionSummary>();
+        List<SessionSummary> summaries = new ArrayList<SessionSummary>();
+        try {
+            List<ActiveSessionInfo> sessions = remote.viewActiveSessions();
+            for (ActiveSessionInfo session : sessions) {
+                summaries.add(new SessionSummary(
+                        session.getUsername(),
+                        session.getLoginTime() == null ? "" : session.getLoginTime().toString(),
+                        session.getRole()
+                ));
+            }
+        } catch (RemoteException ex) {
+            return summaries;
+        }
+        return summaries;
     }
 
     private Report unavailableReport(String reportType) {

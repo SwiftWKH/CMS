@@ -42,7 +42,9 @@ public class MonthlyAppointmentReportFrame extends javax.swing.JFrame {
 
         resultArea.setColumns(20);
         resultArea.setEditable(false);
+        resultArea.setLineWrap(true);
         resultArea.setRows(5);
+        resultArea.setWrapStyleWord(true);
         resultScrollPane.setViewportView(resultArea);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -96,6 +98,7 @@ public class MonthlyAppointmentReportFrame extends javax.swing.JFrame {
                     Integer.parseInt(yearField.getText())
             );
             resultArea.setText(formatReport(report));
+            resultArea.setCaretPosition(0);
         } catch (NumberFormatException ex) {
             resultArea.setText("Month and year must be numbers.");
         }
@@ -106,9 +109,7 @@ public class MonthlyAppointmentReportFrame extends javax.swing.JFrame {
     }
 
     private String formatReport(Report report) {
-        return "Report Type: " + report.getReportType() + System.lineSeparator()
-                + "Generated At: " + report.getGeneratedAt() + System.lineSeparator()
-                + "File Path: " + report.getFilePath();
+        return ReportDisplayHelper.formatReport(report);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

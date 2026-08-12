@@ -4,6 +4,8 @@ import brightcare.model.UserAccount;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -123,6 +125,11 @@ public class SessionManager {
     public synchronized int getActiveSessionCount() {
         cleanupExpiredSessions();
         return sessionsByToken.size();
+    }
+
+    public synchronized List<SessionInfo> getActiveSessions() {
+        cleanupExpiredSessions();
+        return new ArrayList<SessionInfo>(sessionsByToken.values());
     }
 
     public long getSessionTimeoutMillis() {

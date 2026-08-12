@@ -3,9 +3,13 @@ package brightcare.client.common.controller;
 import brightcare.client.gateway.AuthenticationGateway;
 import brightcare.client.gateway.UnavailableAuthenticationGateway;
 import brightcare.model.UserAccount;
+import brightcare.util.BrightCareLogger;
 import javax.swing.JFrame;
+import java.util.logging.Logger;
 
 public class LoginController {
+    private static final Logger LOGGER = BrightCareLogger.getLogger(LoginController.class);
+
     private final AuthenticationGateway authenticationGateway;
     private final NavigationController navigationController;
 
@@ -29,15 +33,20 @@ public class LoginController {
     }
 
     public LoginResult login(String username, String password) {
+        LOGGER.info("LoginController.login called for username=" + safeUsername(username) + ".");
         if (isBlank(username) || isBlank(password)) {
+            LOGGER.warning("Login blocked by client validation: blank username or password.");
             return LoginResult.failure("Username and password are required.");
         }
 
         UserAccount userAccount = authenticationGateway.login(username, password);
         if (userAccount == null) {
+            LOGGER.warning("Login failed after gateway call for username=" + safeUsername(username) + ".");
             return LoginResult.failure("Invalid username or password.");
         }
 
+        LOGGER.info("Login successful for username=" + userAccount.getUsername()
+                + ", role=" + userAccount.getRole() + ".");
         return LoginResult.success(userAccount);
     }
 
@@ -52,6 +61,10 @@ public class LoginController {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().length() == 0;
+    }
+
+    private String safeUsername(String username) {
+        return username == null ? "<null>" : username.trim();
     }
 
     public static class LoginResult {

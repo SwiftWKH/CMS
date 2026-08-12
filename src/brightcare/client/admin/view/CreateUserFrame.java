@@ -110,7 +110,7 @@ public class CreateUserFrame extends javax.swing.JFrame {
                 String.valueOf(roleComboBox.getSelectedItem())
         );
         JOptionPane.showMessageDialog(this,
-                created ? "User created." : "Create user gateway is not connected yet.");
+                created ? "User created." : "User was not created. Check for blank fields, duplicate username, or server errors.");
     }//GEN-LAST:event_createButtonActionPerformed
 
     private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetButtonActionPerformed

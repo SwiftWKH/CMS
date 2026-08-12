@@ -8,32 +8,58 @@ import brightcare.client.common.view.MainMenuFrame;
 import brightcare.client.common.view.SessionExpiredDialog;
 import brightcare.client.gateway.AdminGateway;
 import brightcare.client.gateway.AuthenticationGateway;
+import brightcare.client.gateway.DoctorGateway;
+import brightcare.client.gateway.PatientGateway;
+import brightcare.client.gateway.ReceptionistGateway;
 import brightcare.client.gateway.UnavailableAdminGateway;
 import brightcare.client.gateway.UnavailableAuthenticationGateway;
+import brightcare.client.gateway.UnavailableDoctorGateway;
+import brightcare.client.gateway.UnavailablePatientGateway;
+import brightcare.client.gateway.UnavailableReceptionistGateway;
 import brightcare.client.doctor.view.DoctorFrame;
+import brightcare.client.doctor.controller.DoctorController;
 import brightcare.model.UserAccount;
 import brightcare.client.patient.view.PatientFrame;
+import brightcare.client.patient.controller.PatientController;
 import brightcare.client.receptionist.view.ReceptionistFrame;
+import brightcare.client.receptionist.controller.ReceptionistController;
 import brightcare.security.PermissionChecker;
 import javax.swing.JFrame;
 
 public class NavigationController {
     private final AuthenticationGateway authenticationGateway;
     private final AdminGateway adminGateway;
+    private final PatientGateway patientGateway;
+    private final DoctorGateway doctorGateway;
+    private final ReceptionistGateway receptionistGateway;
 
     public NavigationController() {
-        this(new UnavailableAuthenticationGateway(), new UnavailableAdminGateway());
+        this(new UnavailableAuthenticationGateway(), new UnavailableAdminGateway(),
+                new UnavailablePatientGateway(), new UnavailableDoctorGateway(),
+                new UnavailableReceptionistGateway());
     }
 
     public NavigationController(AuthenticationGateway authenticationGateway, AdminGateway adminGateway) {
+        this(authenticationGateway, adminGateway, new UnavailablePatientGateway(),
+                new UnavailableDoctorGateway(), new UnavailableReceptionistGateway());
+    }
+
+    public NavigationController(AuthenticationGateway authenticationGateway, AdminGateway adminGateway,
+            PatientGateway patientGateway, DoctorGateway doctorGateway, ReceptionistGateway receptionistGateway) {
         if (authenticationGateway == null) {
             throw new IllegalArgumentException("Authentication gateway is required.");
         }
         if (adminGateway == null) {
             throw new IllegalArgumentException("Admin gateway is required.");
         }
+        if (patientGateway == null || doctorGateway == null || receptionistGateway == null) {
+            throw new IllegalArgumentException("Role gateways are required.");
+        }
         this.authenticationGateway = authenticationGateway;
         this.adminGateway = adminGateway;
+        this.patientGateway = patientGateway;
+        this.doctorGateway = doctorGateway;
+        this.receptionistGateway = receptionistGateway;
     }
 
     public void openFrameForUser(UserAccount userAccount, JFrame currentFrame) {
@@ -60,11 +86,16 @@ public class NavigationController {
             );
             nextFrame = new AdminFrame(adminController);
         } else if (PermissionChecker.ROLE_DOCTOR.equalsIgnoreCase(role)) {
-            nextFrame = new DoctorFrame();
+            nextFrame = new DoctorFrame(new DoctorController(doctorGateway, authenticationGateway, this, userId));
         } else if (PermissionChecker.ROLE_RECEPTIONIST.equalsIgnoreCase(role)) {
-            nextFrame = new ReceptionistFrame();
+            nextFrame = new ReceptionistFrame(new ReceptionistController(
+                    receptionistGateway,
+                    authenticationGateway,
+                    this,
+                    userId
+            ));
         } else if (PermissionChecker.ROLE_PATIENT.equalsIgnoreCase(role)) {
-            nextFrame = new PatientFrame();
+            nextFrame = new PatientFrame(new PatientController(patientGateway, authenticationGateway, this, userId));
         } else {
             showAccessDenied(currentFrame);
             return;

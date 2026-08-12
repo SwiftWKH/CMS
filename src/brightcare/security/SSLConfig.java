@@ -1,5 +1,13 @@
 package brightcare.security;
 
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
 public class SSLConfig {
     public static final String KEY_STORE_PROPERTY = "javax.net.ssl.keyStore";
     public static final String KEY_STORE_PASSWORD_PROPERTY = "javax.net.ssl.keyStorePassword";
@@ -43,6 +51,36 @@ public class SSLConfig {
         System.clearProperty(KEY_STORE_PASSWORD_PROPERTY);
         System.clearProperty(TRUST_STORE_PROPERTY);
         System.clearProperty(TRUST_STORE_PASSWORD_PROPERTY);
+    }
+
+    public static void applyTrustAllForDevelopment() {
+        try {
+            TrustManager[] trustAllManagers = new TrustManager[] {
+                new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return new X509Certificate[0];
+                    }
+
+                    public void checkClientTrusted(X509Certificate[] certificates, String authType) {
+                    }
+
+                    public void checkServerTrusted(X509Certificate[] certificates, String authType) {
+                    }
+                }
+            };
+
+            SSLContext context = SSLContext.getInstance("TLS");
+            context.init(null, trustAllManagers, new SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
+            HostnameVerifier verifier = new HostnameVerifier() {
+                public boolean verify(String hostname, javax.net.ssl.SSLSession session) {
+                    return true;
+                }
+            };
+            HttpsURLConnection.setDefaultHostnameVerifier(verifier);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Unable to apply development SSL trust configuration.", ex);
+        }
     }
 
     private void requireText(String value, String label) {

@@ -3,10 +3,14 @@ package brightcare.service;
 import brightcare.model.UserAccount;
 import brightcare.security.PermissionChecker;
 import brightcare.security.SessionManager;
+import brightcare.util.BrightCareLogger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Logger;
 
 public class AuthService {
+    private static final Logger LOGGER = BrightCareLogger.getLogger(AuthService.class);
+
     private final UserAccountRepository userAccountRepository;
     private final SessionManager sessionManager;
     private final PermissionChecker permissionChecker;
@@ -42,20 +46,29 @@ public class AuthService {
     }
 
     public UserAccount login(String username, String password) {
+        LOGGER.info("AuthService.login called for username=" + safeUsername(username) + ".");
         if (isBlank(username) || isBlank(password)) {
+            LOGGER.warning("Login rejected because username or password was blank.");
             return null;
         }
 
         UserAccount userAccount = userAccountRepository.findByUsername(username.trim());
         if (userAccount == null || !userAccount.isActive()) {
+            LOGGER.warning("Login rejected because account was not found or inactive. username="
+                    + safeUsername(username) + ".");
             return null;
         }
 
         if (!passwordHasher.matches(password, userAccount.getPasswordHash())) {
+            LOGGER.warning("Login rejected because password hash did not match. username="
+                    + safeUsername(username) + ", userId=" + userAccount.getUserId() + ".");
             return null;
         }
 
         sessionManager.createSession(userAccount);
+        LOGGER.info("Login accepted. username=" + userAccount.getUsername()
+                + ", userId=" + userAccount.getUserId()
+                + ", role=" + userAccount.getRole() + ".");
         return userAccount;
     }
 
@@ -90,6 +103,10 @@ public class AuthService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().length() == 0;
+    }
+
+    private String safeUsername(String username) {
+        return username == null ? "<null>" : username.trim();
     }
 
     public interface UserAccountRepository {

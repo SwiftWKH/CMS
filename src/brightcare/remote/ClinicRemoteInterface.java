@@ -1,6 +1,7 @@
 package brightcare.remote;
 
 import brightcare.model.Appointment;
+import brightcare.model.ActiveSessionInfo;
 import brightcare.model.ConsultationNote;
 import brightcare.model.Patient;
 import brightcare.model.Report;
@@ -17,6 +18,14 @@ public interface ClinicRemoteInterface extends Remote {
     boolean logout(int userId) throws RemoteException;
 
     boolean checkPermission(int userId, String requiredRole) throws RemoteException;
+
+    List<UserAccount> viewUsers() throws RemoteException;
+
+    UserAccount createUser(String username, String password, String role) throws RemoteException;
+
+    boolean disableUser(String username) throws RemoteException;
+
+    List<ActiveSessionInfo> viewActiveSessions() throws RemoteException;
 
     Patient registerPatient(Patient patient) throws RemoteException;
 

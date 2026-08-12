@@ -70,4 +70,7 @@
     nbproject/build-impl.xml file. 
 
     -->
+    <target name="compile-single" depends="compile">
+        <echo message="BrightCare: compiling the full project before Run File to keep RMI/Swing dependencies available."/>
+    </target>
 </project>

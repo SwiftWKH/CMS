@@ -70,7 +70,7 @@ public class DisableUserFrame extends javax.swing.JFrame {
     private void disableButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_disableButtonActionPerformed
         boolean disabled = controller.disableUser(usernameField.getText());
         JOptionPane.showMessageDialog(this,
-                disabled ? "User disabled." : "Disable user gateway is not connected yet.");
+                disabled ? "User disabled." : "User was not disabled. Check the username or server errors.");
     }//GEN-LAST:event_disableButtonActionPerformed
 
     public AdminController getController() {

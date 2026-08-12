@@ -1,12 +1,25 @@
 package brightcare.service;
 
 import brightcare.model.Report;
+import brightcare.util.BrightCareLogger;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ReportService {
+    private static final Logger LOGGER = BrightCareLogger.getLogger(ReportService.class);
+    private static final DateTimeFormatter FILE_TIMESTAMP =
+            DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS");
+
     private final ReportDataProvider reportDataProvider;
 
     public ReportService() {
@@ -106,7 +119,19 @@ public class ReportService {
     }
 
     private Report createReport(String reportType, String content) {
-        return new Report(0, reportType, 0, LocalDateTime.now(), null);
+        LocalDateTime generatedAt = LocalDateTime.now();
+        String filePath = null;
+        try {
+            Path reportsDirectory = Paths.get("generated-reports");
+            Files.createDirectories(reportsDirectory);
+            Path reportFile = reportsDirectory.resolve(reportType + "_"
+                    + generatedAt.format(FILE_TIMESTAMP) + ".txt");
+            Files.write(reportFile, content.getBytes(StandardCharsets.UTF_8));
+            filePath = reportFile.toAbsolutePath().toString();
+        } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, "Unable to write generated report file for " + reportType + ".", ex);
+        }
+        return new Report(0, reportType, 0, generatedAt, filePath);
     }
 
     private void validateMonth(int month) {

@@ -1,4 +1,106 @@
 package brightcare.dao;
 
+import brightcare.model.Doctor;
+import brightcare.util.BrightCareLogger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class DoctorDAO {
+    private static final Logger LOGGER = BrightCareLogger.getLogger(DoctorDAO.class);
+
+    private final DerbyConnectionFactory connectionFactory;
+
+    public DoctorDAO() {
+        this(new DerbyConnectionFactory());
+    }
+
+    public DoctorDAO(DerbyConnectionFactory connectionFactory) {
+        if (connectionFactory == null) {
+            throw new IllegalArgumentException("Connection factory is required.");
+        }
+        this.connectionFactory = connectionFactory;
+    }
+
+    public List<Doctor> findAll() {
+        List<Doctor> doctors = new ArrayList<Doctor>();
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        try {
+            connection = connectionFactory.getConnection();
+            statement = connection.prepareStatement("SELECT doctor_id, user_id, name, specialization, "
+                    + "contact_number FROM DOCTOR ORDER BY doctor_id");
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                doctors.add(mapDoctor(resultSet));
+            }
+            return doctors;
+        } catch (SQLException ex) {
+            LOGGER.log(Level.SEVERE, "Doctor list failed. sqlState=" + ex.getSQLState()
+                    + ", errorCode=" + ex.getErrorCode(), ex);
+            return doctors;
+        } finally {
+            close(resultSet);
+            close(statement);
+            close(connection);
+        }
+    }
+
+    public Doctor findById(int doctorId) {
+        return findOne("SELECT doctor_id, user_id, name, specialization, contact_number "
+                + "FROM DOCTOR WHERE doctor_id = ?", doctorId);
+    }
+
+    public Doctor findByUserId(int userId) {
+        return findOne("SELECT doctor_id, user_id, name, specialization, contact_number "
+                + "FROM DOCTOR WHERE user_id = ?", userId);
+    }
+
+    private Doctor findOne(String sql, int id) {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        try {
+            connection = connectionFactory.getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, id);
+            resultSet = statement.executeQuery();
+            return resultSet.next() ? mapDoctor(resultSet) : null;
+        } catch (SQLException ex) {
+            LOGGER.log(Level.SEVERE, "Doctor lookup failed. sqlState=" + ex.getSQLState()
+                    + ", errorCode=" + ex.getErrorCode(), ex);
+            return null;
+        } finally {
+            close(resultSet);
+            close(statement);
+            close(connection);
+        }
+    }
+
+    private Doctor mapDoctor(ResultSet resultSet) throws SQLException {
+        return new Doctor(
+                resultSet.getInt("doctor_id"),
+                resultSet.getInt("user_id"),
+                resultSet.getString("name"),
+                resultSet.getString("specialization"),
+                resultSet.getString("contact_number")
+        );
+    }
+
+    private void close(AutoCloseable closeable) {
+        if (closeable == null) {
+            return;
+        }
+        try {
+            closeable.close();
+        } catch (Exception ex) {
+            LOGGER.log(Level.WARNING, "Unable to close Derby doctor resource.", ex);
+        }
+    }
 }

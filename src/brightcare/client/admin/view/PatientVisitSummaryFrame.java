@@ -38,7 +38,9 @@ public class PatientVisitSummaryFrame extends javax.swing.JFrame {
 
         resultArea.setColumns(20);
         resultArea.setEditable(false);
+        resultArea.setLineWrap(true);
         resultArea.setRows(5);
+        resultArea.setWrapStyleWord(true);
         resultScrollPane.setViewportView(resultArea);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -83,6 +85,7 @@ public class PatientVisitSummaryFrame extends javax.swing.JFrame {
         try {
             Report report = controller.generatePatientVisitSummary(Integer.parseInt(patientIdField.getText()));
             resultArea.setText(formatReport(report));
+            resultArea.setCaretPosition(0);
         } catch (NumberFormatException ex) {
             resultArea.setText("Patient ID must be a number.");
         }
@@ -93,9 +96,7 @@ public class PatientVisitSummaryFrame extends javax.swing.JFrame {
     }
 
     private String formatReport(Report report) {
-        return "Report Type: " + report.getReportType() + System.lineSeparator()
-                + "Generated At: " + report.getGeneratedAt() + System.lineSeparator()
-                + "File Path: " + report.getFilePath();
+        return ReportDisplayHelper.formatReport(report);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
