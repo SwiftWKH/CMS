@@ -1,0 +1,8 @@
+/build/
+/dist/
+/nbproject/private/
+/CMS/
+/local/
+/mock-data/
+/sandbox/
+*.local.properties
