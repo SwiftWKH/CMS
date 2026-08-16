@@ -103,6 +103,9 @@ Before merge:
 [ ] Client gateway classes are the only client-side RMI adapters
 [ ] Method signatures match the contract
 [ ] Architecture flow is preserved
+[ ] Multi-machine RMI host/port settings are documented for testers
+[ ] logs/brightcare.log is checked when remote lookup or server calls fail
+[ ] Appointment booking conflict behavior is tested with at least two clients
 ```
 
 Required architecture flow:
@@ -173,6 +176,122 @@ Before sharing or merging:
 [ ] No local mock payloads are included in the handoff
 [ ] Services can later swap mock collaborators for real DAO/API collaborators
 ```
+
+## Local Derby Integration Workflow
+
+Derby is allowed as a temporary integration bypass while the final external database API is unavailable.
+
+Use:
+
+```text
+database/brightcare_schema.sql
+database/brightcare_seed.sql
+jdbc:derby://localhost:1527/BRIGHTCARE_DB
+app / app
+```
+
+Rules:
+
+```text
+[ ] Derby access remains inside DAO/provider classes only
+[ ] Clients never access Derby directly
+[ ] Services keep calling DAOs, not JDBC
+[ ] Reports are generated as runtime files, not persisted
+[ ] generated-reports/, logs/, build/, and dist/ stay out of exports
+[ ] The final API swap should replace DAO/provider internals, not UI/controller/RMI flow
+```
+
+Seed login credentials:
+
+```text
+admin1 / admin123
+doc01  / doctor123
+rec01  / receptionist123
+pat01  / patient123
+doc02  / doctor123
+pat02  / patient123
+```
+
+## Hospital API Workflow
+
+The current API base URL is:
+
+```text
+https://192.168.137.1:7230/hospital
+```
+
+Use API mode:
+
+```text
+-Dbrightcare.data.source=api
+-Dbrightcare.api.baseUrl=https://192.168.137.1:7230/hospital
+-Dbrightcare.api.trustAll=true
+```
+
+Use Derby-only fallback:
+
+```text
+-Dbrightcare.data.source=derby
+```
+
+Verified API endpoints:
+
+```text
+/doctor
+/user
+/patient
+/appointment
+/consultation
+/appwcon
+```
+
+Authentication and Admin user management now use `/user` first. Keep Derby available as a local fallback for unavailable API runs or unmatched local admin accounts. No separate `/auth` or `/login` endpoint is currently used.
+
+## Multi-Machine Test Workflow
+
+When teammates are ready to test on separate machines:
+
+```text
+1. Start Derby/final database access on the server machine.
+2. Run brightcare.server.ClinicServer on the server machine.
+3. Confirm firewall allows TCP port 1099.
+4. On each client machine, run CommonClient with:
+   -Dbrightcare.rmi.host=<server-ip>
+   -Dbrightcare.rmi.port=1099
+5. Watch logs/brightcare.log on the server.
+```
+
+Expected log evidence:
+
+```text
+RMI server started
+RMI service lookup succeeded
+RMI call received. method=...
+clientHost=...
+Appointment slot lock acquired/released
+```
+
+For same-slot concurrency testing, have two clients attempt to book the same doctor/date/time. One should succeed and the other should fail with the slot already booked or currently being booked.
+
+## SSL/TLS Workflow
+
+SSL-RMI is optional and off by default.
+
+Only enable after plain RMI works:
+
+```text
+-Dbrightcare.rmi.ssl=true
+-Djavax.net.ssl.keyStore=<server-keystore>
+-Djavax.net.ssl.keyStorePassword=<password>
+-Djavax.net.ssl.trustStore=<client-truststore>
+-Djavax.net.ssl.trustStorePassword=<password>
+```
+
+All server and client processes must agree on SSL mode. Mixing SSL and non-SSL RMI will fail lookup.
+
+## TCP/UDP Note
+
+TCP is provided through Java RMI. UDP remains backlog and is not needed unless the assignment rubric explicitly asks for a UDP feature or demonstration.
 
 ## Export Workflow
 

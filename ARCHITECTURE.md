@@ -92,6 +92,27 @@ DAO
 -> Cloud Database
 ```
 
+### Local Derby Adapter
+
+For integration testing before the final external API endpoint is available, DAO classes may temporarily use Derby:
+
+```text
+DAO
+-> Derby JDBC
+-> Local BRIGHTCARE_DB
+```
+
+This is an implementation detail inside the DAO layer only. It must not change client, controller, RMI, server, or service responsibilities. When the final API is ready, replace the Derby-backed DAO/provider implementation with the API-backed implementation while preserving the same service and remote method behavior.
+
+Derby scripts live in:
+
+```text
+database/brightcare_schema.sql
+database/brightcare_seed.sql
+```
+
+Reports remain generated runtime artifacts. They are not stored in Derby and no `ReportDAO` or `REPORT` table should be introduced.
+
 ## 3. Application Components
 
 ### RMI Registry
@@ -114,6 +135,33 @@ Example service name:
 ```text
 ClinicService
 ```
+
+Current implementation service name:
+
+```text
+BrightCareClinicService
+```
+
+RMI uses TCP transport. Clients can connect to a remote server by setting:
+
+```text
+brightcare.rmi.host
+brightcare.rmi.port
+```
+
+Remote-call logs are written to `logs/brightcare.log` and include method names, key IDs, dates/times, and client host where available.
+
+Optional SSL-RMI can be enabled with:
+
+```text
+brightcare.rmi.ssl=true
+javax.net.ssl.keyStore
+javax.net.ssl.keyStorePassword
+javax.net.ssl.trustStore
+javax.net.ssl.trustStorePassword
+```
+
+SSL-RMI is disabled by default to preserve the working plain RMI/TCP development path.
 
 ### ClinicRemoteInterface
 
@@ -173,6 +221,8 @@ Role checks
 Coordination between DAOs
 ```
 
+Appointment booking/update paths use `AppointmentLockManager` to protect doctor/date/time slots during concurrent RMI calls. This is intended to prevent two clients from booking the same doctor slot at the same time.
+
 ### DAO Layer
 
 Location:
@@ -204,6 +254,36 @@ Parse API responses
 ```
 
 DAO classes are responsible for converting Java objects into JSON payloads and communicating with the external database API.
+
+During the local Derby bypass, DAO classes perform equivalent CRUD through JDBC. The class boundary stays the same so the final API can replace Derby without rewriting UI or service code.
+
+### Hospital API Adapter
+
+The current API base URL is:
+
+```text
+https://192.168.137.1:7230/hospital
+```
+
+The application defaults to API-first DAO access with Derby fallback:
+
+```text
+-Dbrightcare.data.source=api
+-Dbrightcare.data.source=derby
+```
+
+Verified API resource endpoints:
+
+```text
+/doctor
+/user
+/patient
+/appointment
+/consultation
+/appwcon
+```
+
+`/user` is the final user-account data endpoint currently supplied by the team. `AuthService`, `AdminService`, and `UserAccountDAO` use `/user` first, then Derby as the local integration fallback. No separate `/auth` or `/login` endpoint is currently used.
 
 ## 4. Canonical Package Structure
 
@@ -557,3 +637,7 @@ Client UI
 ```
 
 Any implementation that bypasses this flow is incompatible with the project architecture.
+
+## 13. TCP/UDP Position
+
+TCP is covered by Java RMI. UDP is not implemented in the current system and should remain a backlog item unless required by the final rubric.

@@ -131,6 +131,126 @@ Rules:
 
 The ignored local folders allow Kai's module to be tested with fake data without those files becoming part of the teammate handoff.
 
+## Local Derby Integration Bypass
+
+Until the final external database API is available, the project may run against a local NetBeans/Derby database:
+
+```text
+jdbc:derby://localhost:1527/BRIGHTCARE_DB
+user: app
+password: app
+```
+
+Setup scripts:
+
+```text
+database/brightcare_schema.sql
+database/brightcare_seed.sql
+```
+
+This Derby path is a temporary integration adapter in the DAO layer. It does not change the target architecture. UI, controllers, RMI gateways, server implementation, and services should remain unchanged when the final API arrives; only DAO/provider implementations should be swapped.
+
+Seed credentials:
+
+```text
+admin1 / admin123
+doc01  / doctor123
+rec01  / receptionist123
+pat01  / patient123
+doc02  / doctor123
+pat02  / patient123
+```
+
+Generated report text files are local runtime output and belong under:
+
+```text
+generated-reports/
+```
+
+Do not export Derby runtime files, generated reports, local logs, or build output as final teammate deliverables.
+
+## Hospital API Data Source
+
+The final hospital API endpoint currently tested is:
+
+```text
+https://192.168.137.1:7230/hospital
+```
+
+Verified read endpoints:
+
+```text
+/doctor
+/user
+/patient
+/appointment
+/consultation
+/appwcon
+```
+
+Runtime data source selection:
+
+```text
+Default: API first, Derby fallback
+-Dbrightcare.data.source=api
+-Dbrightcare.data.source=derby
+-Dbrightcare.api.baseUrl=https://192.168.137.1:7230/hospital
+-Dbrightcare.api.trustAll=true
+```
+
+The current API exposes `/user` for user-account data. Authentication and Admin user listing/creation/disable use `/user` first, with local Derby `USER_ACCOUNT` as fallback when the API is unavailable or does not return a matching account. No separate `/auth` or `/login` endpoint is currently used.
+
+The live API uses these field names:
+
+```text
+doctorID, doctorName, special, contextNumber
+user_id, username, password_hash, role, status
+patientID, patientName, patientContactNumber
+appointmentID, appointmentDate, appointmentTime, stage
+consultationID, createAT
+```
+
+## Network, Logging, And Security Runtime
+
+The active distributed transport is Java RMI over TCP.
+
+Server:
+
+```text
+Run brightcare.server.ClinicServer
+Default RMI port: 1099
+Default service: BrightCareClinicService
+```
+
+Client on another machine:
+
+```text
+-Dbrightcare.rmi.host=<server-ip>
+-Dbrightcare.rmi.port=1099
+```
+
+Runtime logs are written to:
+
+```text
+logs/brightcare.log
+```
+
+The logs include RMI lookup attempts, server startup details, login results, remote method calls, client host when available, and appointment slot lock activity. This is the first place to check during multi-laptop testing.
+
+Optional SSL-RMI is available but disabled by default:
+
+```text
+-Dbrightcare.rmi.ssl=true
+-Djavax.net.ssl.keyStore=<server-keystore>
+-Djavax.net.ssl.keyStorePassword=<password>
+-Djavax.net.ssl.trustStore=<client-truststore>
+-Djavax.net.ssl.trustStorePassword=<password>
+```
+
+Enable SSL only after the normal TCP/RMI path works. Both server and clients must use compatible SSL settings.
+
+UDP is not part of the current implementation. Keep UDP as a backlog item unless the assignment rubric explicitly requires it.
+
 ## Export Handoff
 
 Exports should be implementation-only puzzle pieces, not full workspace zips.
