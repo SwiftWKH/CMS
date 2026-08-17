@@ -223,27 +223,33 @@ public class PatientFrame extends javax.swing.JFrame {
     }
 
     private JPanel createBookingForm() {
-        JPanel form = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel form = new JPanel(new BorderLayout(8, 4));
         form.setBackground(Color.WHITE);
         doctorComboBox = new JComboBox<DoctorChoice>();
         doctorComboBox.setPreferredSize(new Dimension(220, doctorComboBox.getPreferredSize().height));
         dateField = field(LocalDate.now().toString());
         timeField = field("09:00");
         reasonField = new JTextField("", 20);
-        form.add(new JLabel("Doctor:"));
-        form.add(doctorComboBox);
-        form.add(new JLabel("Date:"));
-        form.add(dateField);
-        form.add(new JLabel("Time:"));
-        form.add(timeField);
-        form.add(new JLabel("Reason:"));
-        form.add(reasonField);
+        JPanel fields = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        fields.setBackground(Color.WHITE);
+        fields.add(new JLabel("Doctor:"));
+        fields.add(doctorComboBox);
+        fields.add(new JLabel("Date:"));
+        fields.add(dateField);
+        fields.add(new JLabel("Time:"));
+        fields.add(timeField);
+        fields.add(new JLabel("Reason:"));
+        fields.add(reasonField);
         JButton check = new JButton("Check Availability");
         check.addActionListener(e -> showAvailability());
         JButton book = new JButton("Book");
         book.addActionListener(e -> bookAppointment());
-        form.add(check);
-        form.add(book);
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        actions.setBackground(Color.WHITE);
+        actions.add(check);
+        actions.add(book);
+        form.add(fields, BorderLayout.CENTER);
+        form.add(actions, BorderLayout.SOUTH);
         return form;
     }
 
