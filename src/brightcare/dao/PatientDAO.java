@@ -139,6 +139,27 @@ public class PatientDAO {
         }
     }
 
+    public Patient saveWithAccount(Patient patient, String username, String passwordHash, String status) {
+        if (!DataSourceConfig.preferHospitalApi()) {
+            return null;
+        }
+
+        try {
+            LOGGER.info("Creating patient with linked user account through hospital API. username=" + username + ".");
+            String response = apiClient.post("/patient",
+                    HospitalJsonMapper.patientAccountJson(patient, username, passwordHash, status));
+            List<Patient> patients = HospitalJsonMapper.patients(response);
+            if (patients.isEmpty()) {
+                LOGGER.info("Patient account API create returned no parseable patient; returning submitted patient.");
+                return patient;
+            }
+            return patients.get(0);
+        } catch (RuntimeException ex) {
+            LOGGER.log(Level.WARNING, "Patient account API create failed. username=" + username + ".", ex);
+            return null;
+        }
+    }
+
     public Patient update(Patient patient) {
         if (DataSourceConfig.preferHospitalApi()) {
             try {

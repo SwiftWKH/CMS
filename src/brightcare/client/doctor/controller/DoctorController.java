@@ -22,6 +22,7 @@ public class DoctorController {
     private final AuthenticationGateway authenticationGateway;
     private final NavigationController navigationController;
     private final int currentDoctorId;
+    private final int currentUserId;
 
     public DoctorController() {
         this(new UnavailableDoctorGateway(), 0);
@@ -33,6 +34,11 @@ public class DoctorController {
 
     public DoctorController(DoctorGateway gateway, AuthenticationGateway authenticationGateway,
             NavigationController navigationController, int currentDoctorId) {
+        this(gateway, authenticationGateway, navigationController, currentDoctorId, currentDoctorId);
+    }
+
+    public DoctorController(DoctorGateway gateway, AuthenticationGateway authenticationGateway,
+            NavigationController navigationController, int currentDoctorId, int currentUserId) {
         if (gateway == null) {
             throw new IllegalArgumentException("Doctor gateway is required.");
         }
@@ -46,6 +52,7 @@ public class DoctorController {
         this.authenticationGateway = authenticationGateway;
         this.navigationController = navigationController;
         this.currentDoctorId = currentDoctorId;
+        this.currentUserId = currentUserId;
     }
 
     public int getCurrentDoctorId() {
@@ -116,9 +123,10 @@ public class DoctorController {
     }
 
     public void logout(JFrame currentFrame) {
-        LOGGER.info("DoctorController.logout called. currentDoctorId=" + currentDoctorId + ".");
-        if (currentDoctorId > 0) {
-            authenticationGateway.logout(currentDoctorId);
+        LOGGER.info("DoctorController.logout called. currentDoctorId=" + currentDoctorId
+                + ", currentUserId=" + currentUserId + ".");
+        if (currentUserId > 0) {
+            authenticationGateway.logout(currentUserId);
         }
         navigationController.openLogin(currentFrame);
     }

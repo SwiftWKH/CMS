@@ -24,8 +24,10 @@ public class ClinicServer {
             System.out.println("Service: " + SERVICE_NAME);
             System.out.println("Port: " + port);
             System.out.println("SSL RMI: " + SSLConfig.isRmiSslEnabled());
+            System.out.println("SSL relaxed host check: " + SSLConfig.isRmiRelaxedHostCheckEnabled());
             LOGGER.info("BrightCare RMI server started. service=" + SERVICE_NAME + ", port=" + port
-                    + ", ssl=" + SSLConfig.isRmiSslEnabled() + ".");
+                    + ", ssl=" + SSLConfig.isRmiSslEnabled()
+                    + ", relaxedHostCheck=" + SSLConfig.isRmiRelaxedHostCheckEnabled() + ".");
         } catch (Exception ex) {
             System.err.println("Unable to start BrightCare RMI server: " + ex.getMessage());
             LOGGER.log(Level.SEVERE, "Unable to start BrightCare RMI server.", ex);

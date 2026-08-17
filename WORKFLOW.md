@@ -247,6 +247,20 @@ Verified API endpoints:
 
 Authentication and Admin user management now use `/user` first. Keep Derby available as a local fallback for unavailable API runs or unmatched local admin accounts. No separate `/auth` or `/login` endpoint is currently used.
 
+Identity mapping checklist:
+
+```text
+[x] Confirm /user includes role_id
+[x] Route patient/doctor modules with /user.role_id
+[x] Keep /user.user_id for authentication, sessions, and logout
+[ ] Confirm whether /patient also includes user_id
+[ ] Confirm whether /doctor also includes user_id
+[ ] Confirm whether /receptionist includes user_id, if receptionist records exist
+[ ] Remove username inference after all API user records provide role_id
+```
+
+Do not pass `/user.user_id` directly into patient/doctor role operations unless the role record uses the same ID. Patient operations require `patientID`; doctor operations require `doctorID`; logout/session operations require `user_id`. With the current API, `/user.role_id` supplies the patient/doctor role-record ID.
+
 ## Multi-Machine Test Workflow
 
 When teammates are ready to test on separate machines:
@@ -255,11 +269,15 @@ When teammates are ready to test on separate machines:
 1. Start Derby/final database access on the server machine.
 2. Run brightcare.server.ClinicServer on the server machine.
 3. Confirm firewall allows TCP port 1099.
-4. On each client machine, run CommonClient with:
+4. On each client machine, run CommonClient.
+5. In the Login screen Server field, enter the server machine IP address.
+6. Optional NetBeans/JVM defaults:
    -Dbrightcare.rmi.host=<server-ip>
    -Dbrightcare.rmi.port=1099
-5. Watch logs/brightcare.log on the server.
+7. Watch logs/brightcare.log on the server.
 ```
+
+The Login screen Server field is the preferred workflow for teammates. The JVM host property remains available only as a default/fallback setting.
 
 Expected log evidence:
 
@@ -273,19 +291,78 @@ Appointment slot lock acquired/released
 
 For same-slot concurrency testing, have two clients attempt to book the same doctor/date/time. One should succeed and the other should fail with the slot already booked or currently being booked.
 
-## SSL/TLS Workflow
+## Black-Box Presentation Checklist
 
-SSL-RMI is optional and off by default.
+Use this checklist when preparing a lecturer-facing functionality demo from `Assignment_Question.docx`.
 
-Only enable after plain RMI works:
+Current demo assumption:
 
 ```text
--Dbrightcare.rmi.ssl=true
--Djavax.net.ssl.keyStore=<server-keystore>
--Djavax.net.ssl.keyStorePassword=<password>
--Djavax.net.ssl.trustStore=<client-truststore>
--Djavax.net.ssl.trustStorePassword=<password>
+External API database is preferred when available.
+Use Derby fallback for local black-box tests when needed.
+/user.role_id is the current source of truth for patient/doctor module routing.
 ```
+
+Functional requirements:
+
+```text
+[x] Login opens the correct role module through RMI
+[x] Receptionist can register patient records
+[x] Receptionist can update patient records
+[x] Receptionist can create/update/cancel appointments
+[x] Receptionist can view daily schedule
+[x] Patient can update personal information
+[x] Patient can view active appointment schedule
+[x] Patient can book appointments
+[x] Patient can cancel selected active appointments
+[x] Patient can view appointment history
+[x] Patient can check doctor availability when appointment data source is reachable
+[x] Doctor can view appointment list
+[x] Doctor can view patient medical history
+[x] Doctor can update consultation notes
+[x] Admin can generate monthly appointment report
+[x] Admin can generate doctor consultation report
+[x] Admin can generate patient visit summary
+[x] Admin can view users, sessions, and system statistics
+```
+
+Non-functional and distributed requirements:
+
+```text
+[x] Java RMI client-server architecture
+[x] TCP transport through Java RMI
+[x] Serializable model/DTO objects for remote calls
+[x] OOP layering through UI, controller, gateway, server, service, DAO
+[x] Centralized storage through API-first DAO with Derby fallback
+[x] Multi-client readiness through RMI server and synchronized appointment/session logic
+[x] Runtime logs for RMI lookup, remote calls, API calls, and appointment locking
+[x] Remember username/password option in login screen
+[x] SSL/TLS implemented as SSL-RMI with shared development keystore/truststore
+[~] Fault tolerance is basic: logging, exception handling, and Derby fallback
+[x] Backend identity mapping confirmed through /user.role_id
+```
+
+For the black-box presentation, use known API accounts where `/user.role_id` maps to the intended patient or doctor record. Use Derby accounts only when the external API is unavailable.
+
+## SSL/TLS Workflow
+
+SSL-RMI is enabled by default.
+
+Shared development stores live in:
+
+```text
+config/ssl/
+```
+
+Default store password:
+
+```text
+brightcare
+```
+
+`SSLConfig` automatically loads the shared stores. To disable SSL-RMI temporarily, run both server and clients with `-Dbrightcare.rmi.ssl=false`.
+
+For teammate demos, SSL-RMI relaxed host checking is enabled by default with `-Dbrightcare.rmi.relaxedHostCheck=true`. This prevents changing LAN/hotspot IPs from requiring certificate regeneration. Use `-Dbrightcare.rmi.relaxedHostCheck=false` only when testing stricter hostname/IP certificate validation.
 
 All server and client processes must agree on SSL mode. Mixing SSL and non-SSL RMI will fail lookup.
 

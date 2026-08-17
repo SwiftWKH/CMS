@@ -13,6 +13,7 @@ import brightcare.model.ConsultationNote;
 import brightcare.model.Patient;
 import brightcare.model.Report;
 import brightcare.model.UserAccount;
+import brightcare.model.UserProfileInput;
 import brightcare.remote.ClinicRemoteInterface;
 import brightcare.security.SSLConfig;
 import brightcare.service.AdminService;
@@ -96,6 +97,20 @@ public class ClinicServerImplementation extends UnicastRemoteObject implements C
         return adminService.createUser(username, password, role);
     }
 
+    public UserAccount createUserWithProfile(UserProfileInput input) throws RemoteException {
+        String username = input == null ? "" : input.getUsername();
+        String role = input == null ? "" : input.getRole();
+        logRemoteCall("createUserWithProfile", "username=" + username + ", role=" + role);
+        return adminService.createUser(input);
+    }
+
+    public UserAccount updateUser(UserProfileInput input) throws RemoteException {
+        String username = input == null ? "" : input.getUsername();
+        int userId = input == null ? 0 : input.getUserId();
+        logRemoteCall("updateUser", "userId=" + userId + ", username=" + username);
+        return adminService.updateUser(input);
+    }
+
     public boolean disableUser(String username) throws RemoteException {
         logRemoteCall("disableUser", "username=" + username);
         return adminService.disableUser(username);
@@ -106,9 +121,26 @@ public class ClinicServerImplementation extends UnicastRemoteObject implements C
         return adminService.viewActiveSessions();
     }
 
+    public List<ActiveSessionInfo> viewSessionHistory() throws RemoteException {
+        logRemoteCall("viewSessionHistory", "");
+        return adminService.viewSessionHistory();
+    }
+
     public Patient registerPatient(Patient patient) throws RemoteException {
         logRemoteCall("registerPatient", patient == null ? "patient=<null>" : "patientId=" + patient.getPatientId());
         return receptionistService.registerPatient(patient);
+    }
+
+    public Patient registerPatientWithAccount(Patient patient, String username, String password)
+            throws RemoteException {
+        logRemoteCall("registerPatientWithAccount", patient == null ? "patient=<null>"
+                : "patientId=" + patient.getPatientId() + ", username=" + username);
+        return receptionistService.registerPatientWithAccount(patient, username, password);
+    }
+
+    public List<Patient> viewPatients() throws RemoteException {
+        logRemoteCall("viewPatients", "");
+        return receptionistService.viewPatients();
     }
 
     public Patient updatePatientDetails(Patient patient) throws RemoteException {
@@ -139,6 +171,11 @@ public class ClinicServerImplementation extends UnicastRemoteObject implements C
     public Patient updatePersonalInfo(Patient patient) throws RemoteException {
         logRemoteCall("updatePersonalInfo", patient == null ? "patient=<null>" : "patientId=" + patient.getPatientId());
         return patientService.updatePersonalInfo(patient);
+    }
+
+    public Patient viewPatientProfile(int patientId) throws RemoteException {
+        logRemoteCall("viewPatientProfile", "patientId=" + patientId);
+        return patientService.viewPatientProfile(patientId);
     }
 
     public Appointment bookAppointment(Appointment appointment) throws RemoteException {

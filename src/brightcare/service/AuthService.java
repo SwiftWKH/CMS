@@ -68,7 +68,8 @@ public class AuthService {
         sessionManager.createSession(userAccount);
         LOGGER.info("Login accepted. username=" + userAccount.getUsername()
                 + ", userId=" + userAccount.getUserId()
-                + ", role=" + userAccount.getRole() + ".");
+                + ", role=" + userAccount.getRole()
+                + ", roleId=" + userAccount.getRoleId() + ".");
         return userAccount;
     }
 

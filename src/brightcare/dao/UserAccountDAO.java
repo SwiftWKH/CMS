@@ -187,6 +187,48 @@ public class UserAccountDAO implements AuthService.UserAccountRepository {
         }
     }
 
+    public UserAccount update(UserAccount account) {
+        if (account == null || account.getUserId() <= 0) {
+            return null;
+        }
+        if (DataSourceConfig.preferHospitalApi()) {
+            try {
+                LOGGER.info("Updating user account through hospital API. userId=" + account.getUserId()
+                        + ", username=" + account.getUsername() + ".");
+                String response = apiClient.put("/user/" + account.getUserId(), HospitalJsonMapper.userJson(account));
+                List<UserAccount> accounts = HospitalJsonMapper.userAccounts(response);
+                return accounts.isEmpty() ? account : accounts.get(0);
+            } catch (RuntimeException ex) {
+                LOGGER.log(Level.WARNING, "Hospital API user update failed; falling back to Derby. userId="
+                        + account.getUserId() + ".", ex);
+            }
+        }
+
+        Connection connection = null;
+        PreparedStatement statement = null;
+        try {
+            connection = connectionFactory.getConnection();
+            statement = connection.prepareStatement("UPDATE USER_ACCOUNT SET username = ?, password_hash = ?, "
+                    + "role = ?, status = ? WHERE user_id = ?");
+            statement.setString(1, account.getUsername());
+            statement.setString(2, account.getPasswordHash());
+            statement.setString(3, account.getRole());
+            statement.setString(4, account.getStatus());
+            statement.setInt(5, account.getUserId());
+            if (statement.executeUpdate() == 0) {
+                return null;
+            }
+            return account;
+        } catch (SQLException ex) {
+            LOGGER.log(Level.SEVERE, "User account update failed. userId=" + account.getUserId()
+                    + ", sqlState=" + ex.getSQLState() + ", errorCode=" + ex.getErrorCode(), ex);
+            return null;
+        } finally {
+            close(statement);
+            close(connection);
+        }
+    }
+
     private UserAccount findOne(String sql, Object parameter) {
         Connection connection = null;
         PreparedStatement statement = null;
@@ -229,6 +271,7 @@ public class UserAccountDAO implements AuthService.UserAccountRepository {
                 resultSet.getString("username"),
                 resultSet.getString("password_hash"),
                 resultSet.getString("role"),
+                0,
                 resultSet.getString("status")
         );
     }
@@ -372,7 +415,7 @@ public class UserAccountDAO implements AuthService.UserAccountRepository {
 
     private UserAccount externalUser(int userId, String username, String role) {
         return new UserAccount(userId, username, defaultPasswordHash(role, username),
-                role, "ACTIVE");
+                role, userId, "ACTIVE");
     }
 
     private String defaultPasswordHash(String role, String username) {

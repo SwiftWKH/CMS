@@ -149,6 +149,28 @@ throws RemoteException
 
 Do not modify method signatures unless explicitly requested.
 
+## User ID And Role ID Rule
+
+Treat login/account IDs and role-record IDs as separate concepts:
+
+```text
+UserAccount.userId      Authentication/session identity
+UserAccount.roleId      Role-record identity supplied by /user.role_id
+Patient.patientId       Patient module identity
+Doctor.doctorId         Doctor module identity
+```
+
+Do not blindly pass `UserAccount.userId` into patient or doctor operations. First resolve the role record ID from the API payload. The current API supplies this as `/user.role_id`; use that for Patient and Doctor routing while keeping `userId` for authentication, session tracking, and logout.
+
+Temporary compatibility fallback is allowed only when `role_id` is missing:
+
+```text
+P2 -> patientID 2
+D3 -> doctorID 3
+```
+
+This fallback must remain easy to remove and must not override an explicit `role_id`.
+
 ## Contract Table Rule
 
 `Contract Table.xlsx` is the source of truth for:
@@ -314,6 +336,7 @@ Kai-owned implementation files
 NetBeans .java/.form UI pairs for Kai-owned screens
 Client controllers and gateways needed by Kai's screens
 Minimal shared model, remote, or server skeletons required for compilation
+Shared RMI SSL development stores under `config/ssl/`
 Minimal NetBeans project recognition files
 Minimal Git recognition files
 ```

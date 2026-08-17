@@ -35,6 +35,7 @@
                 <Component id="usernameField" max="32767" attributes="0"/>
                 <Component id="passwordField" max="32767" attributes="0"/>
                 <Component id="roleComboBox" pref="260" max="32767" attributes="0"/>
+                <Component id="roleIdInfoLabel" pref="260" max="32767" attributes="0"/>
                 <Group type="102" attributes="0">
                   <Component id="createButton" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
@@ -68,11 +69,13 @@
             <Component id="roleComboBox" alignment="3" min="-2" max="-2" attributes="0"/>
           </Group>
           <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
+          <Component id="roleIdInfoLabel" min="-2" max="-2" attributes="0"/>
+          <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
           <Group type="103" groupAlignment="3" attributes="0">
             <Component id="createButton" alignment="3" min="-2" max="-2" attributes="0"/>
             <Component id="resetButton" alignment="3" min="-2" max="-2" attributes="0"/>
           </Group>
-          <EmptySpace pref="280" max="32767" attributes="0"/>
+          <EmptySpace pref="252" max="32767" attributes="0"/>
         </Group>
       </Group>
     </DimensionLayout>
@@ -111,6 +114,9 @@
       <AuxValues>
         <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
       </AuxValues>
+    </Component>
+    <Component class="javax.swing.JLabel" name="roleIdInfoLabel">
+      <Properties><Property name="text" type="java.lang.String" value="Role ID is assigned automatically by the API."/></Properties>
     </Component>
     <Component class="javax.swing.JButton" name="createButton">
       <Properties><Property name="text" type="java.lang.String" value="Create"/></Properties>

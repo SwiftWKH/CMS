@@ -3,8 +3,11 @@ package brightcare.service;
 import brightcare.concurrency.AppointmentLockManager;
 import brightcare.dao.AppointmentDAO;
 import brightcare.dao.PatientDAO;
+import brightcare.dao.UserAccountDAO;
 import brightcare.model.Appointment;
 import brightcare.model.Patient;
+import brightcare.model.UserAccount;
+import brightcare.security.PermissionChecker;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -12,6 +15,8 @@ public class ReceptionistService {
     private final PatientDAO patientDAO;
     private final AppointmentDAO appointmentDAO;
     private final AppointmentLockManager appointmentLockManager;
+    private final UserAccountDAO userAccountDAO;
+    private final AuthService.PasswordHasher passwordHasher;
 
     public ReceptionistService() {
         this(new PatientDAO(), new AppointmentDAO(), new AppointmentLockManager());
@@ -23,16 +28,56 @@ public class ReceptionistService {
 
     public ReceptionistService(PatientDAO patientDAO, AppointmentDAO appointmentDAO,
             AppointmentLockManager appointmentLockManager) {
-        if (patientDAO == null || appointmentDAO == null || appointmentLockManager == null) {
-            throw new IllegalArgumentException("Patient, appointment DAO, and lock manager are required.");
+        this(patientDAO, appointmentDAO, appointmentLockManager,
+                new UserAccountDAO(), new AuthService.Sha256PasswordHasher());
+    }
+
+    public ReceptionistService(PatientDAO patientDAO, AppointmentDAO appointmentDAO,
+            AppointmentLockManager appointmentLockManager, UserAccountDAO userAccountDAO,
+            AuthService.PasswordHasher passwordHasher) {
+        if (patientDAO == null || appointmentDAO == null || appointmentLockManager == null
+                || userAccountDAO == null || passwordHasher == null) {
+            throw new IllegalArgumentException(
+                    "Patient DAO, appointment DAO, lock manager, user account DAO, and password hasher are required.");
         }
         this.patientDAO = patientDAO;
         this.appointmentDAO = appointmentDAO;
         this.appointmentLockManager = appointmentLockManager;
+        this.userAccountDAO = userAccountDAO;
+        this.passwordHasher = passwordHasher;
     }
 
     public Patient registerPatient(Patient patient) {
         validatePatient(patient);
+        return patientDAO.save(patient);
+    }
+
+    public Patient registerPatientWithAccount(Patient patient, String username, String password) {
+        validatePatient(patient);
+        requireText(username, "Username");
+        requireText(password, "Password");
+
+        String normalizedUsername = username.trim();
+        if (userAccountDAO.findByUsername(normalizedUsername) != null) {
+            throw new IllegalArgumentException("Username already exists.");
+        }
+
+        String passwordHash = passwordHasher.hash(password);
+        Patient apiPatient = patientDAO.saveWithAccount(patient, normalizedUsername, passwordHash, "ACTIVE");
+        if (apiPatient != null) {
+            return apiPatient;
+        }
+
+        UserAccount account = userAccountDAO.create(normalizedUsername, passwordHash, PermissionChecker.ROLE_PATIENT);
+        if (account == null) {
+            return null;
+        }
+
+        patient.setUserId(account.getUserId());
+        if (account.getRoleId() > 0) {
+            patient.setPatientId(account.getRoleId());
+            return patientDAO.update(patient);
+        }
         return patientDAO.save(patient);
     }
 
@@ -59,11 +104,14 @@ public class ReceptionistService {
 
     public Appointment modifyAppointment(Appointment appointment) {
         validateAppointment(appointment);
+        Appointment original = appointmentDAO.findById(appointment.getAppointmentId());
         if (!appointmentLockManager.acquireSlot(appointment)) {
             throw new IllegalStateException("Appointment slot is currently being updated by another user.");
         }
         try {
-            ensureSlotAvailableForUpdate(appointment);
+            if (original == null || !sameSlot(original, appointment)) {
+                ensureSlotAvailableForUpdate(appointment);
+            }
             return appointmentDAO.update(appointment);
         } finally {
             appointmentLockManager.releaseSlot(appointment);
@@ -88,6 +136,12 @@ public class ReceptionistService {
     private void validatePatient(Patient patient) {
         if (patient == null) {
             throw new IllegalArgumentException("Patient is required.");
+        }
+    }
+
+    private void requireText(String value, String label) {
+        if (value == null || value.trim().length() == 0) {
+            throw new IllegalArgumentException(label + " is required.");
         }
     }
 
@@ -122,5 +176,15 @@ public class ReceptionistService {
 
     private boolean sameTime(Appointment left, Appointment right) {
         return left.getAppointmentTime() != null && left.getAppointmentTime().equals(right.getAppointmentTime());
+    }
+
+    private boolean sameSlot(Appointment left, Appointment right) {
+        if (left == null || right == null) {
+            return false;
+        }
+        boolean sameDoctor = left.getDoctorId() == right.getDoctorId();
+        boolean sameDate = left.getAppointmentDate() != null
+                && left.getAppointmentDate().equals(right.getAppointmentDate());
+        return sameDoctor && sameDate && sameTime(left, right);
     }
 }

@@ -39,6 +39,11 @@ public class PatientService {
         return patientDAO.update(patient);
     }
 
+    public Patient viewPatientProfile(int patientId) {
+        validateId(patientId, "Patient ID");
+        return patientDAO.findById(resolvePatientId(patientId));
+    }
+
     public Appointment bookAppointment(Appointment appointment) {
         validateAppointment(appointment);
         appointment.setPatientId(resolvePatientId(appointment.getPatientId()));

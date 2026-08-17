@@ -17,6 +17,7 @@ public class PatientController {
     private final AuthenticationGateway authenticationGateway;
     private final NavigationController navigationController;
     private final int currentPatientId;
+    private final int currentUserId;
 
     public PatientController() {
         this(new UnavailablePatientGateway(), 0);
@@ -28,6 +29,11 @@ public class PatientController {
 
     public PatientController(PatientGateway gateway, AuthenticationGateway authenticationGateway,
             NavigationController navigationController, int currentPatientId) {
+        this(gateway, authenticationGateway, navigationController, currentPatientId, currentPatientId);
+    }
+
+    public PatientController(PatientGateway gateway, AuthenticationGateway authenticationGateway,
+            NavigationController navigationController, int currentPatientId, int currentUserId) {
         if (gateway == null) {
             throw new IllegalArgumentException("Patient gateway is required.");
         }
@@ -41,6 +47,7 @@ public class PatientController {
         this.authenticationGateway = authenticationGateway;
         this.navigationController = navigationController;
         this.currentPatientId = currentPatientId;
+        this.currentUserId = currentUserId;
     }
 
     public int getCurrentPatientId() {
@@ -49,6 +56,10 @@ public class PatientController {
 
     public Patient updatePersonalInfo(Patient patient) {
         return gateway.updatePersonalInfo(patient);
+    }
+
+    public Patient viewPatientProfile() {
+        return currentPatientId > 0 ? gateway.viewPatientProfile(currentPatientId) : null;
     }
 
     public Appointment bookAppointment(Appointment appointment) {
@@ -72,8 +83,8 @@ public class PatientController {
     }
 
     public void logout(JFrame currentFrame) {
-        if (currentPatientId > 0) {
-            authenticationGateway.logout(currentPatientId);
+        if (currentUserId > 0) {
+            authenticationGateway.logout(currentUserId);
         }
         navigationController.openLogin(currentFrame);
     }

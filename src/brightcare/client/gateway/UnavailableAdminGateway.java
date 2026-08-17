@@ -1,6 +1,8 @@
 package brightcare.client.gateway;
 
 import brightcare.model.Report;
+import brightcare.model.UserAccount;
+import brightcare.model.UserProfileInput;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,8 +12,16 @@ public class UnavailableAdminGateway implements AdminGateway {
         return new ArrayList<UserSummary>();
     }
 
-    public boolean createUser(String username, String password, String role) {
-        return false;
+    public UserAccount createUser(String username, String password, String role) {
+        return null;
+    }
+
+    public UserAccount createUser(UserProfileInput input) {
+        return null;
+    }
+
+    public UserAccount updateUser(UserProfileInput input) {
+        return null;
     }
 
     public boolean disableUser(String username) {
@@ -35,6 +45,10 @@ public class UnavailableAdminGateway implements AdminGateway {
     }
 
     public List<SessionSummary> getActiveSessions() {
+        return new ArrayList<SessionSummary>();
+    }
+
+    public List<SessionSummary> getSessionHistory() {
         return new ArrayList<SessionSummary>();
     }
 }

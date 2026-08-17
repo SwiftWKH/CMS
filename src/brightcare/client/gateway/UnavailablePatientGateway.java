@@ -12,6 +12,10 @@ public class UnavailablePatientGateway implements PatientGateway {
         return patient;
     }
 
+    public Patient viewPatientProfile(int patientId) {
+        return new Patient(patientId, 0, "", "", "", "", "");
+    }
+
     public Appointment bookAppointment(Appointment appointment) {
         return appointment;
     }

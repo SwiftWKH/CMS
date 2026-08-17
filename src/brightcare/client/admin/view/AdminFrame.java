@@ -27,9 +27,7 @@ public class AdminFrame extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
-        jButton8 = new javax.swing.JButton();
         jButton9 = new javax.swing.JButton();
-        jButton7 = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
         jButton4 = new javax.swing.JButton();
@@ -80,12 +78,7 @@ public class AdminFrame extends javax.swing.JFrame {
 
         jLabel2.setText("USER MANAGEMENT");
 
-        jButton8.setText("Create User");
-
-        jButton9.setText("View Users");
-
-        jButton7.setText("Disable User");
-        jButton7.addActionListener(this::jButton7ActionPerformed);
+        jButton9.setText("User Management");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -97,9 +90,7 @@ public class AdminFrame extends javax.swing.JFrame {
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel2)
                         .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jButton9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButton8, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButton7, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jButton9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -109,10 +100,6 @@ public class AdminFrame extends javax.swing.JFrame {
                 .addComponent(jLabel2)
                 .addGap(3, 3, 3)
                 .addComponent(jButton9)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton8)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jButton7)
                 .addContainerGap())
         );
 
@@ -259,20 +246,11 @@ public class AdminFrame extends javax.swing.JFrame {
         controller.openActiveSessions(this);
     }//GEN-LAST:event_jButton3ActionPerformed
 
-    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
-        controller.openDisableUser(this);
-    }//GEN-LAST:event_jButton7ActionPerformed
-
     public AdminController getController() {
         return controller;
     }
 
     private void wireManualActions() {
-        jButton8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                controller.openCreateUser(AdminFrame.this);
-            }
-        });
         jButton9.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 controller.openViewUsers(AdminFrame.this);
@@ -302,8 +280,6 @@ public class AdminFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
-    private javax.swing.JButton jButton7;
-    private javax.swing.JButton jButton8;
     private javax.swing.JButton jButton9;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;

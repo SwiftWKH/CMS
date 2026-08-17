@@ -1,8 +1,15 @@
 package brightcare.client.common.controller;
 
 import brightcare.client.gateway.AuthenticationGateway;
+import brightcare.client.gateway.RmiAdminGateway;
+import brightcare.client.gateway.RmiAuthenticationGateway;
+import brightcare.client.gateway.RmiDoctorGateway;
+import brightcare.client.gateway.RmiGatewayFactory;
+import brightcare.client.gateway.RmiPatientGateway;
+import brightcare.client.gateway.RmiReceptionistGateway;
 import brightcare.client.gateway.UnavailableAuthenticationGateway;
 import brightcare.model.UserAccount;
+import brightcare.remote.ClinicRemoteInterface;
 import brightcare.util.BrightCareLogger;
 import javax.swing.JFrame;
 import java.util.logging.Logger;
@@ -10,8 +17,9 @@ import java.util.logging.Logger;
 public class LoginController {
     private static final Logger LOGGER = BrightCareLogger.getLogger(LoginController.class);
 
-    private final AuthenticationGateway authenticationGateway;
-    private final NavigationController navigationController;
+    private AuthenticationGateway authenticationGateway;
+    private NavigationController navigationController;
+    private String connectedHost;
 
     public LoginController() {
         this(new NavigationController());
@@ -30,6 +38,36 @@ public class LoginController {
         }
         this.authenticationGateway = authenticationGateway;
         this.navigationController = navigationController;
+    }
+
+    public boolean connectToServer(String host) {
+        String resolvedHost = host == null || host.trim().length() == 0 ? "localhost" : host.trim();
+        if (resolvedHost.equalsIgnoreCase(connectedHost)
+                && !(authenticationGateway instanceof UnavailableAuthenticationGateway)) {
+            return true;
+        }
+
+        ClinicRemoteInterface remote = RmiGatewayFactory.lookupRemote(resolvedHost);
+        if (remote == null) {
+            LOGGER.warning("Unable to connect login controller to RMI host=" + resolvedHost + ".");
+            authenticationGateway = new UnavailableAuthenticationGateway();
+            navigationController = new NavigationController();
+            connectedHost = null;
+            return false;
+        }
+
+        RmiAuthenticationGateway rmiAuthenticationGateway = new RmiAuthenticationGateway(remote);
+        authenticationGateway = rmiAuthenticationGateway;
+        navigationController = new NavigationController(
+                rmiAuthenticationGateway,
+                new RmiAdminGateway(remote),
+                new RmiPatientGateway(remote),
+                new RmiDoctorGateway(remote),
+                new RmiReceptionistGateway(remote)
+        );
+        connectedHost = resolvedHost;
+        LOGGER.info("Login controller connected to RMI host=" + connectedHost + ".");
+        return true;
     }
 
     public LoginResult login(String username, String password) {

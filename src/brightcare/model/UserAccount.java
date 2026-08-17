@@ -9,16 +9,22 @@ public class UserAccount implements Serializable {
     private String username;
     private String passwordHash;
     private String role;
+    private int roleId;
     private String status;
 
     public UserAccount() {
     }
 
     public UserAccount(int userId, String username, String passwordHash, String role, String status) {
+        this(userId, username, passwordHash, role, 0, status);
+    }
+
+    public UserAccount(int userId, String username, String passwordHash, String role, int roleId, String status) {
         this.userId = userId;
         this.username = username;
         this.passwordHash = passwordHash;
         this.role = role;
+        this.roleId = roleId;
         this.status = status;
     }
 
@@ -52,6 +58,14 @@ public class UserAccount implements Serializable {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public int getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(int roleId) {
+        this.roleId = roleId;
     }
 
     public String getStatus() {

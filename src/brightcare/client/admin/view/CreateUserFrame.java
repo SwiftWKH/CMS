@@ -1,6 +1,7 @@
 package brightcare.client.admin.view;
 
 import brightcare.client.admin.controller.AdminController;
+import brightcare.model.UserAccount;
 import brightcare.security.PermissionChecker;
 import javax.swing.JOptionPane;
 
@@ -26,6 +27,7 @@ public class CreateUserFrame extends javax.swing.JFrame {
         usernameField = new javax.swing.JTextField();
         passwordField = new javax.swing.JPasswordField();
         roleComboBox = new javax.swing.JComboBox<>();
+        roleIdInfoLabel = new javax.swing.JLabel();
         createButton = new javax.swing.JButton();
         resetButton = new javax.swing.JButton();
 
@@ -45,6 +47,8 @@ public class CreateUserFrame extends javax.swing.JFrame {
             PermissionChecker.ROLE_RECEPTIONIST,
             PermissionChecker.ROLE_PATIENT
         }));
+
+        roleIdInfoLabel.setText("Role ID is assigned automatically by the API.");
 
         createButton.setText("Create");
         createButton.addActionListener(this::createButtonActionPerformed);
@@ -70,6 +74,7 @@ public class CreateUserFrame extends javax.swing.JFrame {
                             .addComponent(usernameField)
                             .addComponent(passwordField)
                             .addComponent(roleComboBox, 0, 260, Short.MAX_VALUE)
+                            .addComponent(roleIdInfoLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(createButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -94,10 +99,12 @@ public class CreateUserFrame extends javax.swing.JFrame {
                     .addComponent(roleLabel)
                     .addComponent(roleComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(roleIdInfoLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(createButton)
                     .addComponent(resetButton))
-                .addContainerGap(280, Short.MAX_VALUE))
+                .addContainerGap(252, Short.MAX_VALUE))
         );
 
         pack();
@@ -113,13 +120,18 @@ public class CreateUserFrame extends javax.swing.JFrame {
             return;
         }
 
-        boolean created = controller.createUser(
+        UserAccount created = controller.createUser(
                 usernameField.getText(),
                 new String(passwordField.getPassword()),
                 String.valueOf(roleComboBox.getSelectedItem())
         );
-        JOptionPane.showMessageDialog(this,
-                created ? "User created." : "User was not created. Check for blank fields, duplicate username, or server errors.");
+        if (created == null) {
+            JOptionPane.showMessageDialog(this,
+                    "User was not created. Check for blank fields, duplicate username, or server errors.");
+            return;
+        }
+
+        JOptionPane.showMessageDialog(this, createdMessage(created));
     }//GEN-LAST:event_createButtonActionPerformed
 
     private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetButtonActionPerformed
@@ -136,12 +148,27 @@ public class CreateUserFrame extends javax.swing.JFrame {
         return value == null || value.trim().length() == 0;
     }
 
+    private String createdMessage(UserAccount account) {
+        StringBuilder message = new StringBuilder();
+        message.append("User created.");
+        if (account.getUserId() > 0) {
+            message.append(System.lineSeparator()).append("User ID: ").append(account.getUserId());
+        }
+        if (account.getRoleId() > 0) {
+            message.append(System.lineSeparator()).append("Role ID: ").append(account.getRoleId());
+        } else {
+            message.append(System.lineSeparator()).append("Role ID will be assigned by the role table.");
+        }
+        return message.toString();
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton createButton;
     private javax.swing.JLabel passwordLabel;
     private javax.swing.JPasswordField passwordField;
     private javax.swing.JButton resetButton;
     private javax.swing.JComboBox<String> roleComboBox;
+    private javax.swing.JLabel roleIdInfoLabel;
     private javax.swing.JLabel roleLabel;
     private javax.swing.JLabel titleLabel;
     private javax.swing.JTextField usernameField;

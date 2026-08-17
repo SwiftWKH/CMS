@@ -24,7 +24,8 @@ public class RmiAuthenticationGateway implements AuthenticationGateway {
         try {
             UserAccount account = remote.login(username, password);
             LOGGER.info("Remote login returned " + (account == null ? "null" : "userId="
-                    + account.getUserId() + ", role=" + account.getRole()) + ".");
+                    + account.getUserId() + ", role=" + account.getRole()
+                    + ", roleId=" + account.getRoleId()) + ".");
             return account;
         } catch (RemoteException ex) {
             LOGGER.log(Level.SEVERE, "Remote login failed for username=" + safeUsername(username) + ".", ex);

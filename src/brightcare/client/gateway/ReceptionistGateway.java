@@ -8,6 +8,10 @@ import java.util.List;
 public interface ReceptionistGateway {
     Patient registerPatient(Patient patient);
 
+    Patient registerPatient(Patient patient, String username, String password);
+
+    List<Patient> viewPatients();
+
     Patient updatePatientDetails(Patient patient);
 
     Appointment createAppointment(Appointment appointment);

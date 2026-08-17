@@ -16,16 +16,23 @@ public class RmiGatewayFactory {
     }
 
     public static ClinicRemoteInterface lookupDefaultRemote() {
+        String host = System.getProperty("brightcare.rmi.host", "localhost");
+        return lookupRemote(host);
+    }
+
+    public static ClinicRemoteInterface lookupRemote(String host) {
         try {
-            String host = System.getProperty("brightcare.rmi.host", "localhost");
+            String resolvedHost = host == null || host.trim().length() == 0 ? "localhost" : host.trim();
             int port = Integer.parseInt(System.getProperty("brightcare.rmi.port",
                     String.valueOf(ClinicServer.DEFAULT_RMI_PORT)));
-            LOGGER.info("Looking up RMI service. host=" + host + ", port=" + port
+            System.setProperty("brightcare.rmi.host", resolvedHost);
+            LOGGER.info("Looking up RMI service. host=" + resolvedHost + ", port=" + port
                     + ", service=" + ClinicServer.SERVICE_NAME
-                    + ", ssl=" + SSLConfig.isRmiSslEnabled() + ".");
+                    + ", ssl=" + SSLConfig.isRmiSslEnabled()
+                    + ", relaxedHostCheck=" + SSLConfig.isRmiRelaxedHostCheckEnabled() + ".");
             Registry registry = SSLConfig.isRmiSslEnabled()
-                    ? LocateRegistry.getRegistry(host, port, SSLConfig.rmiClientSocketFactoryIfEnabled())
-                    : LocateRegistry.getRegistry(host, port);
+                    ? LocateRegistry.getRegistry(resolvedHost, port, SSLConfig.rmiClientSocketFactoryIfEnabled())
+                    : LocateRegistry.getRegistry(resolvedHost, port);
             ClinicRemoteInterface remote = (ClinicRemoteInterface) registry.lookup(ClinicServer.SERVICE_NAME);
             LOGGER.info("RMI service lookup succeeded.");
             return remote;

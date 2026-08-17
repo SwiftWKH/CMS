@@ -27,6 +27,14 @@ public class RmiPatientGateway implements PatientGateway {
         }
     }
 
+    public Patient viewPatientProfile(int patientId) {
+        try {
+            return remote.viewPatientProfile(patientId);
+        } catch (RuntimeException | RemoteException ex) {
+            return null;
+        }
+    }
+
     public Appointment bookAppointment(Appointment appointment) {
         try {
             return remote.bookAppointment(appointment);

@@ -80,14 +80,30 @@ Allow TCP port `1099` through the server firewall.
 
 ## Client Machines
 
-Run `brightcare.client.common.CommonClient` with:
+Run `brightcare.client.common.CommonClient`.
+
+In the Login screen, set:
+
+```text
+Server: <server-ip>
+```
+
+Example:
+
+```text
+Server: 192.168.137.1
+```
+
+The Server field is remembered locally with Java Preferences after use.
+
+Optional NetBeans/JVM defaults:
 
 ```text
 -Dbrightcare.rmi.host=<server-ip>
 -Dbrightcare.rmi.port=1099
 ```
 
-If testing on the same machine, no host property is needed because the default host is `localhost`.
+If testing on the same machine, use `localhost`.
 
 ## Logs
 
@@ -131,17 +147,24 @@ The seeded `doctor 1 / 2026-08-14 / 09:00` slot is already booked, so it should 
 
 ## SSL-RMI
 
-SSL-RMI support exists but is disabled by default.
-
-Only enable after normal RMI works:
+SSL-RMI is enabled by default using the shared development stores:
 
 ```text
--Dbrightcare.rmi.ssl=true
--Djavax.net.ssl.keyStore=<server-keystore>
--Djavax.net.ssl.keyStorePassword=<password>
--Djavax.net.ssl.trustStore=<client-truststore>
--Djavax.net.ssl.trustStorePassword=<password>
+config/ssl/brightcare-rmi-keystore.p12
+config/ssl/brightcare-rmi-truststore.p12
 ```
+
+Default store password: `brightcare`.
+
+To disable SSL-RMI temporarily, run both server and clients with `-Dbrightcare.rmi.ssl=false`.
+
+For demo compatibility, SSL-RMI relaxed host checking is enabled by default:
+
+```text
+-Dbrightcare.rmi.relaxedHostCheck=true
+```
+
+This avoids regenerating keys when the server laptop receives a different LAN/hotspot IP. The connection still uses SSL-RMI and the shared truststore. For stricter certificate hostname/IP validation, set `-Dbrightcare.rmi.relaxedHostCheck=false`.
 
 All server and client processes must use the same SSL mode. Mixing SSL and non-SSL RMI will fail lookup.
 

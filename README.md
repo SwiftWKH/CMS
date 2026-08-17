@@ -200,11 +200,22 @@ Default: API first, Derby fallback
 
 The current API exposes `/user` for user-account data. Authentication and Admin user listing/creation/disable use `/user` first, with local Derby `USER_ACCOUNT` as fallback when the API is unavailable or does not return a matching account. No separate `/auth` or `/login` endpoint is currently used.
 
+User identity and role-record identity must be treated as separate values:
+
+```text
+user_id      Login/account identity from /user
+role_id      Role-record identity supplied by /user for the logged-in role
+patientID    Patient role-record identity from /patient
+doctorID     Doctor role-record identity from /doctor
+```
+
+Current final mapping: `/user.role_id` is used to open patient and doctor modules with the correct role-record ID. `user_id` remains the authentication/session/logout ID. Username inference such as `P2 -> patientID 2` and `D3 -> doctorID 3` remains as a legacy compatibility fallback only when `role_id` is missing.
+
 The live API uses these field names:
 
 ```text
 doctorID, doctorName, special, contextNumber
-user_id, username, password_hash, role, status
+user_id, username, password_hash, role, role_id, status
 patientID, patientName, patientContactNumber
 appointmentID, appointmentDate, appointmentTime, stage
 consultationID, createAT
@@ -225,9 +236,19 @@ Default service: BrightCareClinicService
 Client on another machine:
 
 ```text
+Run brightcare.client.common.CommonClient
+Enter the server machine IP address in the Login screen Server field
+Example: 192.168.137.1
+```
+
+Optional NetBeans/JVM defaults:
+
+```text
 -Dbrightcare.rmi.host=<server-ip>
 -Dbrightcare.rmi.port=1099
 ```
+
+The Login screen Server field is the preferred teammate workflow. It is remembered on each user's machine with Java Preferences, so teammates do not need to keep editing NetBeans Run properties after the first successful setup.
 
 Runtime logs are written to:
 
@@ -237,17 +258,39 @@ logs/brightcare.log
 
 The logs include RMI lookup attempts, server startup details, login results, remote method calls, client host when available, and appointment slot lock activity. This is the first place to check during multi-laptop testing.
 
-Optional SSL-RMI is available but disabled by default:
+SSL-RMI is enabled by default for the shared NetBeans project.
+
+The development keystore/truststore are included under:
 
 ```text
--Dbrightcare.rmi.ssl=true
--Djavax.net.ssl.keyStore=<server-keystore>
--Djavax.net.ssl.keyStorePassword=<password>
--Djavax.net.ssl.trustStore=<client-truststore>
--Djavax.net.ssl.trustStorePassword=<password>
+config/ssl/
 ```
 
-Enable SSL only after the normal TCP/RMI path works. Both server and clients must use compatible SSL settings.
+Default store password:
+
+```text
+brightcare
+```
+
+`SSLConfig` automatically loads these stores. To temporarily disable SSL-RMI for troubleshooting, run both server and clients with:
+
+```text
+-Dbrightcare.rmi.ssl=false
+```
+
+For multi-laptop demos, SSL-RMI uses relaxed host checking by default:
+
+```text
+-Dbrightcare.rmi.relaxedHostCheck=true
+```
+
+This keeps the SSL-RMI transport encrypted and trusted by the shared truststore, but it does not reject the connection only because the server laptop's hotspot/LAN IP changed. To return to stricter certificate hostname/IP validation, run both client and server with:
+
+```text
+-Dbrightcare.rmi.relaxedHostCheck=false
+```
+
+All server and client processes must use the same SSL mode. Mixing SSL and non-SSL RMI will fail lookup.
 
 UDP is not part of the current implementation. Keep UDP as a backlog item unless the assignment rubric explicitly requires it.
 

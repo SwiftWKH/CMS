@@ -9,6 +9,8 @@ import java.util.List;
 public interface PatientGateway {
     Patient updatePersonalInfo(Patient patient);
 
+    Patient viewPatientProfile(int patientId);
+
     Appointment bookAppointment(Appointment appointment);
 
     Appointment cancelAppointment(int appointmentId);

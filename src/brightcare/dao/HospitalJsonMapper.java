@@ -26,10 +26,12 @@ class HospitalJsonMapper {
             int id = intValue(object, "patientID", "patientId");
             String name = stringValue(object, "patientName", "name");
             String contact = stringValue(object, "patientContactNumber", "contactNumber");
+            String icPassport = stringValue(object, "icPassport", "icPassportNo", "ic_passport_no");
             Patient patient = new Patient();
             patient.setPatientId(id);
             patient.setFirstName(firstName(name));
             patient.setLastName(lastName(name));
+            patient.setIcPassportNo(icPassport);
             patient.setContactNumber(contact);
             patients.add(patient);
         }
@@ -63,6 +65,7 @@ class HospitalJsonMapper {
                     stringValue(object, "username"),
                     stringValue(object, "password_hash", "passwordHash", "password"),
                     stringValue(object, "role"),
+                    intValue(object, "role_id", "roleId", "roleID"),
                     normalizeAccountStatus(stringValue(object, "status"))
             );
             accounts.add(account);
@@ -133,7 +136,39 @@ class HospitalJsonMapper {
     static String patientJson(Patient patient) {
         return "{"
                 + "\"patientName\":\"" + escape(patient.getFullName()) + "\","
-                + "\"patientContactNumber\":\"" + escape(patient.getContactNumber()) + "\""
+                + "\"patientContactNumber\":\"" + escape(patient.getContactNumber()) + "\","
+                + "\"icPassport\":\"" + escape(patient.getIcPassportNo()) + "\""
+                + "}";
+    }
+
+    static String patientAccountJson(Patient patient, String username, String passwordHash, String status) {
+        return "{"
+                + "\"patientName\":\"" + escape(patient.getFullName()) + "\","
+                + "\"patientContactNumber\":\"" + escape(patient.getContactNumber()) + "\","
+                + "\"icPassport\":\"" + escape(patient.getIcPassportNo()) + "\","
+                + "\"username\":\"" + escape(username) + "\","
+                + "\"password_hash\":\"" + escape(passwordHash) + "\","
+                + "\"status\":\"" + escape(defaultText(status, "ACTIVE")) + "\""
+                + "}";
+    }
+
+    static String doctorJson(Doctor doctor) {
+        return "{"
+                + "\"doctorName\":\"" + escape(doctor.getName()) + "\","
+                + "\"status\":\"active\","
+                + "\"special\":\"" + escape(defaultText(doctor.getSpecialization(), "General")) + "\","
+                + "\"contextNumber\":\"" + escape(doctor.getContactNumber()) + "\""
+                + "}";
+    }
+
+    static String doctorAccountJson(Doctor doctor, String username, String passwordHash, String status) {
+        return "{"
+                + "\"doctorName\":\"" + escape(doctor.getName()) + "\","
+                + "\"status\":\"" + escape(defaultText(status, "ACTIVE")) + "\","
+                + "\"special\":\"" + escape(defaultText(doctor.getSpecialization(), "General")) + "\","
+                + "\"contextNumber\":\"" + escape(doctor.getContactNumber()) + "\","
+                + "\"username\":\"" + escape(username) + "\","
+                + "\"password_hash\":\"" + escape(passwordHash) + "\""
                 + "}";
     }
 
@@ -169,6 +204,10 @@ class HospitalJsonMapper {
         if (account.getUserId() > 0) {
             builder.append("\"user_id\":").append(account.getUserId()).append(',');
             builder.append("\"userId\":").append(account.getUserId()).append(',');
+        }
+        if (account.getRoleId() > 0) {
+            builder.append("\"role_id\":").append(account.getRoleId()).append(',');
+            builder.append("\"roleId\":").append(account.getRoleId()).append(',');
         }
         builder.append("\"username\":\"").append(escape(account.getUsername())).append("\",");
         builder.append("\"password_hash\":\"").append(escape(account.getPasswordHash())).append("\",");

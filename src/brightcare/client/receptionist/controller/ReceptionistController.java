@@ -46,6 +46,14 @@ public class ReceptionistController {
         return gateway.registerPatient(patient);
     }
 
+    public Patient registerPatient(Patient patient, String username, String password) {
+        return gateway.registerPatient(patient, username, password);
+    }
+
+    public List<Patient> viewPatients() {
+        return gateway.viewPatients();
+    }
+
     public Patient updatePatientDetails(Patient patient) {
         return gateway.updatePatientDetails(patient);
     }

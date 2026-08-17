@@ -16,6 +16,8 @@ import brightcare.client.admin.view.SystemStatisticsFrame;
 import brightcare.client.admin.view.ViewUsersFrame;
 import brightcare.client.common.controller.NavigationController;
 import brightcare.model.Report;
+import brightcare.model.UserAccount;
+import brightcare.model.UserProfileInput;
 import javax.swing.JFrame;
 import java.util.List;
 
@@ -58,7 +60,7 @@ public class AdminController {
     }
 
     public void openCreateUser(JFrame currentFrame) {
-        show(new CreateUserFrame(this));
+        show(new ViewUsersFrame(this));
     }
 
     public void openViewUsers(JFrame currentFrame) {
@@ -66,7 +68,7 @@ public class AdminController {
     }
 
     public void openDisableUser(JFrame currentFrame) {
-        show(new DisableUserFrame(this));
+        show(new ViewUsersFrame(this));
     }
 
     public void openMonthlyAppointmentReport(JFrame currentFrame) {
@@ -97,8 +99,16 @@ public class AdminController {
         return adminGateway.getUsers();
     }
 
-    public boolean createUser(String username, String password, String role) {
+    public UserAccount createUser(String username, String password, String role) {
         return adminGateway.createUser(username, password, role);
+    }
+
+    public UserAccount createUser(UserProfileInput input) {
+        return adminGateway.createUser(input);
+    }
+
+    public UserAccount updateUser(UserProfileInput input) {
+        return adminGateway.updateUser(input);
     }
 
     public boolean disableUser(String username) {
@@ -123,6 +133,10 @@ public class AdminController {
 
     public List<SessionSummary> getActiveSessions() {
         return adminGateway.getActiveSessions();
+    }
+
+    public List<SessionSummary> getSessionHistory() {
+        return adminGateway.getSessionHistory();
     }
 
     public int getCurrentUserId() {

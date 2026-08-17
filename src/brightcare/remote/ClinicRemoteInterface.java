@@ -6,6 +6,7 @@ import brightcare.model.ConsultationNote;
 import brightcare.model.Patient;
 import brightcare.model.Report;
 import brightcare.model.UserAccount;
+import brightcare.model.UserProfileInput;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.time.LocalDate;
@@ -23,11 +24,21 @@ public interface ClinicRemoteInterface extends Remote {
 
     UserAccount createUser(String username, String password, String role) throws RemoteException;
 
+    UserAccount createUserWithProfile(UserProfileInput input) throws RemoteException;
+
+    UserAccount updateUser(UserProfileInput input) throws RemoteException;
+
     boolean disableUser(String username) throws RemoteException;
 
     List<ActiveSessionInfo> viewActiveSessions() throws RemoteException;
 
+    List<ActiveSessionInfo> viewSessionHistory() throws RemoteException;
+
     Patient registerPatient(Patient patient) throws RemoteException;
+
+    Patient registerPatientWithAccount(Patient patient, String username, String password) throws RemoteException;
+
+    List<Patient> viewPatients() throws RemoteException;
 
     Patient updatePatientDetails(Patient patient) throws RemoteException;
 
@@ -40,6 +51,8 @@ public interface ClinicRemoteInterface extends Remote {
     List<Appointment> viewAppointmentSchedule(LocalDate date) throws RemoteException;
 
     Patient updatePersonalInfo(Patient patient) throws RemoteException;
+
+    Patient viewPatientProfile(int patientId) throws RemoteException;
 
     Appointment bookAppointment(Appointment appointment) throws RemoteException;
 

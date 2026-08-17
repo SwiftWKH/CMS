@@ -11,6 +11,14 @@ public class UnavailableReceptionistGateway implements ReceptionistGateway {
         return patient;
     }
 
+    public Patient registerPatient(Patient patient, String username, String password) {
+        return patient;
+    }
+
+    public List<Patient> viewPatients() {
+        return new ArrayList<Patient>();
+    }
+
     public Patient updatePatientDetails(Patient patient) {
         return patient;
     }

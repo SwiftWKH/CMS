@@ -3,6 +3,7 @@ package brightcare.client.gateway;
 import brightcare.model.ActiveSessionInfo;
 import brightcare.model.Report;
 import brightcare.model.UserAccount;
+import brightcare.model.UserProfileInput;
 import brightcare.remote.ClinicRemoteInterface;
 import java.rmi.RemoteException;
 import java.time.LocalDateTime;
@@ -24,7 +25,8 @@ public class RmiAdminGateway implements AdminGateway {
         try {
             List<UserAccount> accounts = remote.viewUsers();
             for (UserAccount account : accounts) {
-                users.add(new UserSummary(account.getUsername(), account.getRole(), account.getStatus()));
+                users.add(new UserSummary(account.getUserId(), account.getUsername(), account.getPasswordHash(),
+                        account.getRole(), account.getRoleId(), account.getStatus()));
             }
         } catch (RemoteException ex) {
             return users;
@@ -32,11 +34,27 @@ public class RmiAdminGateway implements AdminGateway {
         return users;
     }
 
-    public boolean createUser(String username, String password, String role) {
+    public UserAccount createUser(String username, String password, String role) {
         try {
-            return remote.createUser(username, password, role) != null;
+            return remote.createUser(username, password, role);
         } catch (RemoteException ex) {
-            return false;
+            return null;
+        }
+    }
+
+    public UserAccount createUser(UserProfileInput input) {
+        try {
+            return remote.createUserWithProfile(input);
+        } catch (RemoteException ex) {
+            return null;
+        }
+    }
+
+    public UserAccount updateUser(UserProfileInput input) {
+        try {
+            return remote.updateUser(input);
+        } catch (RemoteException ex) {
+            return null;
         }
     }
 
@@ -88,6 +106,27 @@ public class RmiAdminGateway implements AdminGateway {
                 summaries.add(new SessionSummary(
                         session.getUsername(),
                         session.getLoginTime() == null ? "" : session.getLoginTime().toString(),
+                        session.getLogoutTime() == null ? "" : session.getLogoutTime().toString(),
+                        session.getStatus(),
+                        session.getRole()
+                ));
+            }
+        } catch (RemoteException ex) {
+            return summaries;
+        }
+        return summaries;
+    }
+
+    public List<SessionSummary> getSessionHistory() {
+        List<SessionSummary> summaries = new ArrayList<SessionSummary>();
+        try {
+            List<ActiveSessionInfo> sessions = remote.viewSessionHistory();
+            for (ActiveSessionInfo session : sessions) {
+                summaries.add(new SessionSummary(
+                        session.getUsername(),
+                        session.getLoginTime() == null ? "" : session.getLoginTime().toString(),
+                        session.getLogoutTime() == null ? "" : session.getLogoutTime().toString(),
+                        session.getStatus(),
                         session.getRole()
                 ));
             }

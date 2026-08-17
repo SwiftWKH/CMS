@@ -151,17 +151,20 @@ brightcare.rmi.port
 
 Remote-call logs are written to `logs/brightcare.log` and include method names, key IDs, dates/times, and client host where available.
 
-Optional SSL-RMI can be enabled with:
+SSL-RMI is enabled by default using shared development stores:
 
 ```text
-brightcare.rmi.ssl=true
-javax.net.ssl.keyStore
-javax.net.ssl.keyStorePassword
-javax.net.ssl.trustStore
-javax.net.ssl.trustStorePassword
+config/ssl/brightcare-rmi-keystore.p12
+config/ssl/brightcare-rmi-truststore.p12
 ```
 
-SSL-RMI is disabled by default to preserve the working plain RMI/TCP development path.
+Default store password:
+
+```text
+brightcare
+```
+
+`SSLConfig` auto-loads these files. Use `brightcare.rmi.ssl=false` on both server and clients only when troubleshooting plain RMI.
 
 ### ClinicRemoteInterface
 
@@ -284,6 +287,37 @@ Verified API resource endpoints:
 ```
 
 `/user` is the final user-account data endpoint currently supplied by the team. `AuthService`, `AdminService`, and `UserAccountDAO` use `/user` first, then Derby as the local integration fallback. No separate `/auth` or `/login` endpoint is currently used.
+
+### User To Role Identity Mapping
+
+Login/account IDs and role-record IDs are not interchangeable.
+
+```text
+/user.user_id          Authentication/session identity
+/user.role_id          Patient/doctor role-record identity from the user endpoint
+/patient.patientID     Patient module identity
+/doctor.doctorID       Doctor module identity
+```
+
+The current API design is:
+
+```text
+USER.role_id points to the matching role record for the account role
+```
+
+After login, routing should resolve:
+
+```text
+user_id + role + role_id -> role module opens with role_id
+```
+
+Example:
+
+```text
+john logs in -> /user.user_id is 11 -> /user.role_id is 8 -> Patient page uses patientID 8
+```
+
+The Patient/Doctor pages must receive the role record ID for role operations, while logout/session handling must continue using `user_id`. Username-based inference such as `P2 -> patientID 2` and `D3 -> doctorID 3` is now legacy fallback only when `/user.role_id` is missing.
 
 ## 4. Canonical Package Structure
 

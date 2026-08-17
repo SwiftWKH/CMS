@@ -99,6 +99,27 @@ public class DoctorDAO {
                 + "FROM DOCTOR WHERE user_id = ?", userId);
     }
 
+    public Doctor saveWithAccount(Doctor doctor, String username, String passwordHash, String status) {
+        if (!DataSourceConfig.preferHospitalApi()) {
+            return null;
+        }
+
+        try {
+            LOGGER.info("Creating doctor with linked user account through hospital API. username=" + username + ".");
+            String response = apiClient.post("/doctor",
+                    HospitalJsonMapper.doctorAccountJson(doctor, username, passwordHash, status));
+            List<Doctor> doctors = HospitalJsonMapper.doctors(response);
+            if (doctors.isEmpty()) {
+                LOGGER.info("Doctor account API create returned no parseable doctor; returning submitted doctor.");
+                return doctor;
+            }
+            return doctors.get(0);
+        } catch (RuntimeException ex) {
+            LOGGER.log(Level.WARNING, "Doctor account API create failed. username=" + username + ".", ex);
+            return null;
+        }
+    }
+
     private Doctor findOne(String sql, int id) {
         Connection connection = null;
         PreparedStatement statement = null;

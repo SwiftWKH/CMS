@@ -30,15 +30,18 @@
                       <EmptySpace min="-2" pref="48" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="1" attributes="0">
                           <Component id="jButton1" min="-2" max="-2" attributes="0"/>
+                          <Component id="rememberCheckBox" min="-2" max="-2" attributes="0"/>
                           <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="1" attributes="0">
                                   <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
                                   <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="serverHostLabel" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
                                   <Component id="jTextField1" pref="303" max="32767" attributes="0"/>
                                   <Component id="jTextField2" max="32767" attributes="0"/>
+                                  <Component id="serverHostField" max="32767" attributes="0"/>
                               </Group>
                           </Group>
                       </Group>
@@ -68,8 +71,15 @@
                   <Component id="jTextField2" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Component id="serverHostLabel" min="-2" max="-2" attributes="0"/>
+                  <Component id="serverHostField" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="rememberCheckBox" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
               <Component id="jButton1" min="-2" max="-2" attributes="0"/>
-              <EmptySpace pref="162" max="32767" attributes="0"/>
+              <EmptySpace pref="139" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -93,6 +103,11 @@
         <Property name="text" type="java.lang.String" value="Password:"/>
       </Properties>
     </Component>
+    <Component class="javax.swing.JLabel" name="serverHostLabel">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Server:"/>
+      </Properties>
+    </Component>
     <Component class="javax.swing.JTextField" name="jTextField1">
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextField1ActionPerformed"/>
@@ -102,6 +117,16 @@
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextField2ActionPerformed"/>
       </Events>
+    </Component>
+    <Component class="javax.swing.JTextField" name="serverHostField">
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="serverHostFieldActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="rememberCheckBox">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Remember username and password"/>
+      </Properties>
     </Component>
     <Component class="javax.swing.JButton" name="jButton1">
       <Properties>

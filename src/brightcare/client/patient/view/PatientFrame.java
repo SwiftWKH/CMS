@@ -22,6 +22,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
 
@@ -31,14 +32,18 @@ public class PatientFrame extends javax.swing.JFrame {
     private final PatientController controller;
     private CardLayout cardLayout;
     private JPanel contentPanel;
-    private JTextField patientIdField;
+    private JTextField firstNameField;
+    private JTextField lastNameField;
+    private JTextField icField;
+    private JTextField contactField;
+    private JTextField recordField;
     private JTextField doctorIdField;
     private JTextField dateField;
     private JTextField timeField;
     private JTextField reasonField;
     private JTable scheduleTable;
     private JTable historyTable;
-    private JLabel statusLabel;
+    private JLabel appointmentStatusLabel;
 
     public PatientFrame() {
         this(new PatientController());
@@ -49,6 +54,9 @@ public class PatientFrame extends javax.swing.JFrame {
         initComponents();
         buildPortal();
         setLocationRelativeTo(null);
+        loadProfile();
+        loadActiveSchedule();
+        loadHistory();
     }
 
     @SuppressWarnings("unchecked")
@@ -61,11 +69,11 @@ public class PatientFrame extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1000, Short.MAX_VALUE)
+            .addGap(0, 1120, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 680, Short.MAX_VALUE)
+            .addGap(0, 720, Short.MAX_VALUE)
         );
 
         pack();
@@ -82,27 +90,23 @@ public class PatientFrame extends javax.swing.JFrame {
 
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
-        contentPanel.add(createDashboard(), "dashboard");
         contentPanel.add(createProfilePanel(), "profile");
-        contentPanel.add(createBookPanel(), "book");
-        contentPanel.add(createSchedulePanel(false), "schedule");
-        contentPanel.add(createSchedulePanel(true), "history");
+        contentPanel.add(createAppointmentsPanel(), "appointments");
+        contentPanel.add(createHistoryPanel(), "history");
         add(contentPanel, BorderLayout.CENTER);
 
-        cardLayout.show(contentPanel, "dashboard");
+        cardLayout.show(contentPanel, "appointments");
         pack();
     }
 
     private JPanel createSidebar() {
         JPanel sidebar = new JPanel();
-        sidebar.setPreferredSize(new Dimension(230, 680));
+        sidebar.setPreferredSize(new Dimension(230, 720));
         sidebar.setBackground(new Color(221, 225, 229));
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.add(sidebarTitle("PATIENT PORTAL"));
-        sidebar.add(navButton("Home Dashboard", "dashboard"));
         sidebar.add(navButton("Profile Management", "profile"));
-        sidebar.add(navButton("Book Appointment", "book"));
-        sidebar.add(navButton("Active Schedule", "schedule"));
+        sidebar.add(navButton("Appointments", "appointments"));
         sidebar.add(navButton("History Logs", "history"));
         JButton logout = navButton("Logout", null);
         logout.addActionListener(e -> controller.logout(this));
@@ -126,7 +130,16 @@ public class PatientFrame extends javax.swing.JFrame {
         button.setFocusPainted(false);
         button.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
         if (card != null) {
-            button.addActionListener(e -> cardLayout.show(contentPanel, card));
+            button.addActionListener(e -> {
+                cardLayout.show(contentPanel, card);
+                if ("profile".equals(card)) {
+                    loadProfile();
+                } else if ("appointments".equals(card)) {
+                    loadActiveSchedule();
+                } else if ("history".equals(card)) {
+                    loadHistory();
+                }
+            });
         }
         return button;
     }
@@ -141,70 +154,74 @@ public class PatientFrame extends javax.swing.JFrame {
         return panel;
     }
 
-    private JPanel createDashboard() {
-        JPanel panel = page("Home Dashboard");
-        statusLabel = new JLabel("Use the sidebar to manage profile, appointments, and history.");
-        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        panel.add(statusLabel, BorderLayout.CENTER);
-        return panel;
-    }
-
     private JPanel createProfilePanel() {
         JPanel panel = page("Profile Management");
-        JPanel form = new JPanel(new java.awt.GridLayout(8, 2, 8, 8));
-        JTextField id = field(defaultPatientId());
-        JTextField first = field("");
-        JTextField last = field("");
-        JTextField ic = field("");
-        JTextField contact = field("");
-        JTextField record = field("");
-        form.add(new JLabel("Patient ID:"));
-        form.add(id);
+        JPanel form = new JPanel(new java.awt.GridLayout(6, 2, 8, 8));
+        form.setBackground(Color.WHITE);
+        firstNameField = field("");
+        lastNameField = field("");
+        icField = field("");
+        contactField = field("");
+        recordField = field("");
+        recordField.setEditable(false);
         form.add(new JLabel("First Name:"));
-        form.add(first);
+        form.add(firstNameField);
         form.add(new JLabel("Last Name:"));
-        form.add(last);
+        form.add(lastNameField);
         form.add(new JLabel("IC/Passport:"));
-        form.add(ic);
+        form.add(icField);
         form.add(new JLabel("Contact Number:"));
-        form.add(contact);
+        form.add(contactField);
         form.add(new JLabel("Medical Record ID:"));
-        form.add(record);
+        form.add(recordField);
         JButton save = new JButton("Update Profile");
-        save.addActionListener(e -> {
-            try {
-                parseRequiredInt(id.getText(), "Patient ID");
-                requireText(first.getText(), "First name");
-                requireText(last.getText(), "Last name");
-                requireText(ic.getText(), "IC/Passport");
-                requireText(contact.getText(), "Contact number");
-                requireText(record.getText(), "Medical record ID");
-                Patient patient = new Patient(parseInt(id.getText()), 0, first.getText(), last.getText(),
-                        ic.getText(), contact.getText(), record.getText());
-                Patient updated = controller.updatePersonalInfo(patient);
-                JOptionPane.showMessageDialog(this, updated == null
-                        ? "Profile update failed."
-                        : "Profile update submitted.");
-            } catch (IllegalArgumentException ex) {
-                JOptionPane.showMessageDialog(this, ex.getMessage());
-            }
-        });
+        save.addActionListener(e -> updateProfile());
         form.add(new JLabel());
         form.add(save);
-        panel.add(form, BorderLayout.CENTER);
+        panel.add(form, BorderLayout.NORTH);
         return panel;
     }
 
-    private JPanel createBookPanel() {
-        JPanel panel = page("Book Appointment");
+    private JPanel createAppointmentsPanel() {
+        JPanel panel = page("Appointments");
+        JPanel body = new JPanel(new BorderLayout(10, 10));
+        body.setBackground(Color.WHITE);
+        body.add(createBookingForm(), BorderLayout.NORTH);
+        scheduleTable = new JTable(new DefaultTableModel(
+                new Object[] {"ID", "Patient", "Doctor", "Date", "Time", "Status", "Reason"}, 0));
+        scheduleTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        scheduleTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                fillBookingFromSelectedSchedule();
+            }
+        });
+        body.add(new JScrollPane(scheduleTable), BorderLayout.CENTER);
+        JButton refresh = new JButton("Refresh Schedule");
+        refresh.addActionListener(e -> loadActiveSchedule());
+        JButton cancel = new JButton("Cancel Selected");
+        cancel.addActionListener(e -> cancelSelectedAppointment());
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        buttons.setBackground(Color.WHITE);
+        buttons.add(cancel);
+        buttons.add(refresh);
+        JPanel footer = new JPanel(new BorderLayout());
+        footer.setBackground(Color.WHITE);
+        appointmentStatusLabel = new JLabel("Ready.");
+        appointmentStatusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        footer.add(appointmentStatusLabel, BorderLayout.WEST);
+        footer.add(buttons, BorderLayout.EAST);
+        body.add(footer, BorderLayout.SOUTH);
+        panel.add(body, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel createBookingForm() {
         JPanel form = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        patientIdField = field(defaultPatientId());
+        form.setBackground(Color.WHITE);
         doctorIdField = field("");
-        dateField = field("2026-08-12");
+        dateField = field(LocalDate.now().toString());
         timeField = field("09:00");
-        reasonField = field("");
-        form.add(new JLabel("Patient ID:"));
-        form.add(patientIdField);
+        reasonField = new JTextField("", 20);
         form.add(new JLabel("Doctor ID:"));
         form.add(doctorIdField);
         form.add(new JLabel("Date:"));
@@ -219,22 +236,16 @@ public class PatientFrame extends javax.swing.JFrame {
         book.addActionListener(e -> bookAppointment());
         form.add(check);
         form.add(book);
-        panel.add(form, BorderLayout.CENTER);
-        return panel;
+        return form;
     }
 
-    private JPanel createSchedulePanel(boolean history) {
-        JPanel panel = page(history ? "History Logs" : "Active Schedule");
-        JTable table = new JTable(new DefaultTableModel(
+    private JPanel createHistoryPanel() {
+        JPanel panel = page("History Logs");
+        historyTable = new JTable(new DefaultTableModel(
                 new Object[] {"ID", "Patient", "Doctor", "Date", "Time", "Status", "Reason"}, 0));
-        if (history) {
-            historyTable = table;
-        } else {
-            scheduleTable = table;
-        }
-        JButton refresh = new JButton("Refresh");
-        refresh.addActionListener(e -> loadAppointments(history));
-        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        JButton refresh = new JButton("Refresh History");
+        refresh.addActionListener(e -> loadHistory());
+        panel.add(new JScrollPane(historyTable), BorderLayout.CENTER);
         panel.add(refresh, BorderLayout.SOUTH);
         return panel;
     }
@@ -243,14 +254,47 @@ public class PatientFrame extends javax.swing.JFrame {
         return new JTextField(text, 10);
     }
 
+    private void loadProfile() {
+        if (firstNameField == null) {
+            return;
+        }
+        Patient profile = controller.viewPatientProfile();
+        if (profile == null) {
+            return;
+        }
+        firstNameField.setText(text(profile.getFirstName()));
+        lastNameField.setText(text(profile.getLastName()));
+        icField.setText(text(profile.getIcPassportNo()));
+        contactField.setText(text(profile.getContactNumber()));
+        recordField.setText(text(profile.getMedicalRecordId()));
+    }
+
+    private void updateProfile() {
+        try {
+            requireText(firstNameField.getText(), "First name");
+            requireText(lastNameField.getText(), "Last name");
+            requireText(icField.getText(), "IC/Passport");
+            requireText(contactField.getText(), "Contact number");
+            Patient patient = new Patient(controller.getCurrentPatientId(), 0, firstNameField.getText(),
+                    lastNameField.getText(), icField.getText(), contactField.getText(), recordField.getText());
+            Patient updated = controller.updatePersonalInfo(patient);
+            JOptionPane.showMessageDialog(this, updated == null
+                    ? "Profile update failed."
+                    : "Profile update submitted.");
+            loadProfile();
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
+
     private void showAvailability() {
         try {
             int doctorId = parseRequiredInt(doctorIdField.getText(), "Doctor ID");
             LocalDate date = parseRequiredDate(dateField.getText(), "Date");
             List<LocalTime> slots = controller.checkDoctorAvailability(doctorId, date);
-            JOptionPane.showMessageDialog(this, slots.isEmpty()
-                    ? "No available slots returned."
-                    : "Available slots: " + slots);
+            String message = slots.isEmpty() ? "No available slots returned." : "Available slots: " + slots;
+            appointmentStatusLabel.setText(message);
+            JOptionPane.showMessageDialog(this, message);
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage());
         }
@@ -258,7 +302,8 @@ public class PatientFrame extends javax.swing.JFrame {
 
     private void bookAppointment() {
         try {
-            int patientId = parseRequiredInt(patientIdField.getText(), "Patient ID");
+            int patientId = controller.getCurrentPatientId();
+            parseRequiredInt(String.valueOf(patientId), "Patient ID");
             int doctorId = parseRequiredInt(doctorIdField.getText(), "Doctor ID");
             LocalDate date = parseRequiredDate(dateField.getText(), "Date");
             LocalTime time = parseRequiredTime(timeField.getText(), "Time");
@@ -266,18 +311,57 @@ public class PatientFrame extends javax.swing.JFrame {
             Appointment appointment = new Appointment(0, patientId, doctorId, date, time,
                     "BOOKED", reasonField.getText());
             Appointment booked = controller.bookAppointment(appointment);
+            appointmentStatusLabel.setText(booked == null ? "Appointment booking failed." : "Appointment booking submitted.");
             JOptionPane.showMessageDialog(this, booked == null
                     ? "Appointment booking failed."
                     : "Appointment booking submitted.");
+            loadActiveSchedule();
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage());
         }
     }
 
+    private void cancelSelectedAppointment() {
+        int row = scheduleTable.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Select an active appointment to cancel.");
+            return;
+        }
+        int modelRow = scheduleTable.convertRowIndexToModel(row);
+        DefaultTableModel model = (DefaultTableModel) scheduleTable.getModel();
+        int appointmentId = parseRequiredInt(text(model.getValueAt(modelRow, 0)), "Appointment ID");
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                "Cancel appointment #" + appointmentId + "?",
+                "Confirm Cancellation",
+                JOptionPane.YES_NO_OPTION
+        );
+        if (choice != JOptionPane.YES_OPTION) {
+            return;
+        }
+        Appointment cancelled = controller.cancelAppointment(appointmentId);
+        appointmentStatusLabel.setText(cancelled == null
+                ? "Appointment cancellation failed."
+                : "Appointment cancellation submitted.");
+        JOptionPane.showMessageDialog(this, cancelled == null
+                ? "Appointment cancellation failed."
+                : "Appointment cancellation submitted.");
+        loadActiveSchedule();
+        loadHistory();
+    }
+
+    private void loadActiveSchedule() {
+        loadAppointments(false);
+    }
+
+    private void loadHistory() {
+        loadAppointments(true);
+    }
+
     private void loadAppointments(boolean history) {
         int patientId;
         try {
-            patientId = parseRequiredInt(defaultPatientId(), "Patient ID");
+            patientId = parseRequiredInt(String.valueOf(controller.getCurrentPatientId()), "Patient ID");
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage());
             return;
@@ -285,13 +369,35 @@ public class PatientFrame extends javax.swing.JFrame {
         List<Appointment> appointments = history
                 ? controller.viewAppointmentHistory(patientId)
                 : controller.viewAppointmentSchedule(patientId);
-        DefaultTableModel model = (DefaultTableModel) (history ? historyTable : scheduleTable).getModel();
+        JTable table = history ? historyTable : scheduleTable;
+        if (table == null) {
+            return;
+        }
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
         model.setRowCount(0);
         for (Appointment appointment : appointments) {
+            boolean isHistory = "COMPLETED".equalsIgnoreCase(appointment.getStatus())
+                    || "CANCELLED".equalsIgnoreCase(appointment.getStatus());
+            if (history != isHistory) {
+                continue;
+            }
             model.addRow(new Object[] {appointment.getAppointmentId(), appointment.getPatientId(),
                 appointment.getDoctorId(), appointment.getAppointmentDate(), appointment.getAppointmentTime(),
                 appointment.getStatus(), appointment.getReason()});
         }
+    }
+
+    private void fillBookingFromSelectedSchedule() {
+        int row = scheduleTable.getSelectedRow();
+        if (row < 0) {
+            return;
+        }
+        int modelRow = scheduleTable.convertRowIndexToModel(row);
+        DefaultTableModel model = (DefaultTableModel) scheduleTable.getModel();
+        doctorIdField.setText(text(model.getValueAt(modelRow, 2)));
+        dateField.setText(text(model.getValueAt(modelRow, 3)));
+        timeField.setText(shortTime(text(model.getValueAt(modelRow, 4))));
+        reasonField.setText(text(model.getValueAt(modelRow, 6)));
     }
 
     private void requireText(String value, String label) {
@@ -328,32 +434,16 @@ public class PatientFrame extends javax.swing.JFrame {
         }
     }
 
-    private String defaultPatientId() {
-        return controller.getCurrentPatientId() > 0 ? String.valueOf(controller.getCurrentPatientId()) : "";
+    private String shortTime(String value) {
+        if (value == null) {
+            return "";
+        }
+        String trimmed = value.trim();
+        return trimmed.length() >= 5 ? trimmed.substring(0, 5) : trimmed;
     }
 
-    private int parseInt(String value) {
-        try {
-            return Integer.parseInt(value.trim());
-        } catch (Exception ex) {
-            return 0;
-        }
-    }
-
-    private LocalDate parseDate(String value) {
-        try {
-            return LocalDate.parse(value.trim());
-        } catch (Exception ex) {
-            return LocalDate.now();
-        }
-    }
-
-    private LocalTime parseTime(String value) {
-        try {
-            return LocalTime.parse(value.trim());
-        } catch (Exception ex) {
-            return LocalTime.of(9, 0);
-        }
+    private String text(Object value) {
+        return value == null ? "" : value.toString();
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

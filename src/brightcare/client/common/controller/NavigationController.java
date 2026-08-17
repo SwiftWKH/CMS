@@ -67,7 +67,8 @@ public class NavigationController {
             showAccessDenied(currentFrame);
             return;
         }
-        openFrameForRole(userAccount.getRole(), userAccount.getUserId(), currentFrame);
+        openFrameForRole(userAccount.getRole(), userAccount.getUsername(), userAccount.getUserId(),
+                userAccount.getRoleId(), currentFrame);
     }
 
     public void openFrameForRole(String role, JFrame currentFrame) {
@@ -75,6 +76,14 @@ public class NavigationController {
     }
 
     public void openFrameForRole(String role, int userId, JFrame currentFrame) {
+        openFrameForRole(role, null, userId, currentFrame);
+    }
+
+    private void openFrameForRole(String role, String username, int userId, JFrame currentFrame) {
+        openFrameForRole(role, username, userId, 0, currentFrame);
+    }
+
+    private void openFrameForRole(String role, String username, int userId, int roleId, JFrame currentFrame) {
         JFrame nextFrame;
 
         if (PermissionChecker.ROLE_ADMIN.equalsIgnoreCase(role)) {
@@ -86,7 +95,8 @@ public class NavigationController {
             );
             nextFrame = new AdminFrame(adminController);
         } else if (PermissionChecker.ROLE_DOCTOR.equalsIgnoreCase(role)) {
-            nextFrame = new DoctorFrame(new DoctorController(doctorGateway, authenticationGateway, this, userId));
+            nextFrame = new DoctorFrame(new DoctorController(doctorGateway, authenticationGateway, this,
+                    resolveRoleRecordId("D", username, userId, roleId), userId));
         } else if (PermissionChecker.ROLE_RECEPTIONIST.equalsIgnoreCase(role)) {
             nextFrame = new ReceptionistFrame(new ReceptionistController(
                     receptionistGateway,
@@ -95,13 +105,34 @@ public class NavigationController {
                     userId
             ));
         } else if (PermissionChecker.ROLE_PATIENT.equalsIgnoreCase(role)) {
-            nextFrame = new PatientFrame(new PatientController(patientGateway, authenticationGateway, this, userId));
+            nextFrame = new PatientFrame(new PatientController(patientGateway, authenticationGateway, this,
+                    resolveRoleRecordId("P", username, userId, roleId), userId));
         } else {
             showAccessDenied(currentFrame);
             return;
         }
 
         showNextFrame(currentFrame, nextFrame);
+    }
+
+    private int resolveRoleRecordId(String expectedPrefix, String username, int fallbackUserId, int apiRoleId) {
+        if (apiRoleId > 0) {
+            return apiRoleId;
+        }
+        if (username == null || expectedPrefix == null) {
+            return fallbackUserId;
+        }
+        String trimmed = username.trim();
+        if (trimmed.length() <= expectedPrefix.length()
+                || !trimmed.toUpperCase().startsWith(expectedPrefix.toUpperCase())) {
+            return fallbackUserId;
+        }
+        try {
+            int parsed = Integer.parseInt(trimmed.substring(expectedPrefix.length()).trim());
+            return parsed > 0 ? parsed : fallbackUserId;
+        } catch (NumberFormatException ex) {
+            return fallbackUserId;
+        }
     }
 
     public void openMainMenu(JFrame currentFrame) {

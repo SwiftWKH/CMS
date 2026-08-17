@@ -8,15 +8,24 @@ public class ActiveSessionInfo implements Serializable {
 
     private String username;
     private LocalDateTime loginTime;
+    private LocalDateTime logoutTime;
     private String role;
+    private String status;
 
     public ActiveSessionInfo() {
     }
 
     public ActiveSessionInfo(String username, LocalDateTime loginTime, String role) {
+        this(username, loginTime, null, role, "ACTIVE");
+    }
+
+    public ActiveSessionInfo(String username, LocalDateTime loginTime, LocalDateTime logoutTime,
+            String role, String status) {
         this.username = username;
         this.loginTime = loginTime;
+        this.logoutTime = logoutTime;
         this.role = role;
+        this.status = status;
     }
 
     public String getUsername() {
@@ -35,11 +44,27 @@ public class ActiveSessionInfo implements Serializable {
         this.loginTime = loginTime;
     }
 
+    public LocalDateTime getLogoutTime() {
+        return logoutTime;
+    }
+
+    public void setLogoutTime(LocalDateTime logoutTime) {
+        this.logoutTime = logoutTime;
+    }
+
     public String getRole() {
         return role;
     }
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

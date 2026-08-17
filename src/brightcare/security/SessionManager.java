@@ -14,6 +14,7 @@ public class SessionManager {
 
     private final Map<String, SessionInfo> sessionsByToken;
     private final Map<Integer, String> tokensByUserId;
+    private final List<SessionInfo> sessionHistory;
     private long sessionTimeoutMillis;
 
     public SessionManager() {
@@ -23,6 +24,7 @@ public class SessionManager {
     public SessionManager(long sessionTimeoutMillis) {
         this.sessionsByToken = new HashMap<String, SessionInfo>();
         this.tokensByUserId = new HashMap<Integer, String>();
+        this.sessionHistory = new ArrayList<SessionInfo>();
         this.sessionTimeoutMillis = sessionTimeoutMillis;
     }
 
@@ -77,6 +79,7 @@ public class SessionManager {
         }
 
         tokensByUserId.remove(removed.getUserId());
+        sessionHistory.add(removed.ended("LOGGED_OUT"));
         return true;
     }
 
@@ -86,7 +89,10 @@ public class SessionManager {
             return false;
         }
 
-        sessionsByToken.remove(token);
+        SessionInfo removed = sessionsByToken.remove(token);
+        if (removed != null) {
+            sessionHistory.add(removed.ended("LOGGED_OUT"));
+        }
         return true;
     }
 
@@ -115,6 +121,7 @@ public class SessionManager {
             if (sessionInfo.isExpired()) {
                 iterator.remove();
                 tokensByUserId.remove(sessionInfo.getUserId());
+                sessionHistory.add(sessionInfo.ended("EXPIRED"));
                 removedCount++;
             }
         }
@@ -130,6 +137,11 @@ public class SessionManager {
     public synchronized List<SessionInfo> getActiveSessions() {
         cleanupExpiredSessions();
         return new ArrayList<SessionInfo>(sessionsByToken.values());
+    }
+
+    public synchronized List<SessionInfo> getSessionHistory() {
+        cleanupExpiredSessions();
+        return new ArrayList<SessionInfo>(sessionHistory);
     }
 
     public long getSessionTimeoutMillis() {
@@ -150,15 +162,24 @@ public class SessionManager {
         private final String role;
         private final LocalDateTime createdAt;
         private final LocalDateTime expiresAt;
+        private final LocalDateTime endedAt;
+        private final String status;
 
         public SessionInfo(String token, int userId, String username, String role,
                 LocalDateTime createdAt, LocalDateTime expiresAt) {
+            this(token, userId, username, role, createdAt, expiresAt, null, "ACTIVE");
+        }
+
+        public SessionInfo(String token, int userId, String username, String role,
+                LocalDateTime createdAt, LocalDateTime expiresAt, LocalDateTime endedAt, String status) {
             this.token = token;
             this.userId = userId;
             this.username = username;
             this.role = role;
             this.createdAt = createdAt;
             this.expiresAt = expiresAt;
+            this.endedAt = endedAt;
+            this.status = status;
         }
 
         public String getToken() {
@@ -185,8 +206,21 @@ public class SessionManager {
             return expiresAt;
         }
 
+        public LocalDateTime getEndedAt() {
+            return endedAt;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
         public boolean isExpired() {
             return LocalDateTime.now().isAfter(expiresAt);
+        }
+
+        private SessionInfo ended(String status) {
+            return new SessionInfo(token, userId, username, role, createdAt, expiresAt,
+                    LocalDateTime.now(), status);
         }
     }
 }
