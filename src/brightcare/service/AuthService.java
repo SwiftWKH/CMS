@@ -65,6 +65,12 @@ public class AuthService {
             return null;
         }
 
+        if (sessionManager.isUserLoggedIn(userAccount.getUserId())) {
+            LOGGER.warning("Login rejected because account already has an active session. username="
+                    + userAccount.getUsername() + ", userId=" + userAccount.getUserId() + ".");
+            return null;
+        }
+
         sessionManager.createSession(userAccount);
         LOGGER.info("Login accepted. username=" + userAccount.getUsername()
                 + ", userId=" + userAccount.getUserId()
