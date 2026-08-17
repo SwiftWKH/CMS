@@ -58,6 +58,7 @@ public class DoctorFrame extends javax.swing.JFrame {
     private JTable appointmentTable;
     private JTextField patientIdField;
     private JTable historyTable;
+    private JTable consultationAppointmentTable;
     private JTextField appointmentIdField;
     private JTextField consultationPatientIdField;
     private JTextField consultationDoctorIdField;
@@ -312,6 +313,25 @@ public class DoctorFrame extends javax.swing.JFrame {
         title.setForeground(new Color(43, 48, 59));
         panel.add(title, BorderLayout.NORTH);
 
+        JPanel body = new JPanel(new BorderLayout(12, 12));
+        body.setBackground(Color.WHITE);
+        consultationAppointmentTable = new JTable(new DefaultTableModel(
+                new Object[] {"ID", "Patient", "Doctor", "Date", "Time", "Status", "Reason"}, 0));
+        styleTable(consultationAppointmentTable);
+        consultationAppointmentTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                fillConsultationFromSelectedAppointment(consultationAppointmentTable, false);
+            }
+        });
+        JScrollPane appointmentScrollPane = new JScrollPane(consultationAppointmentTable);
+        appointmentScrollPane.setPreferredSize(new Dimension(850, 170));
+        appointmentScrollPane.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                "Select Appointment",
+                TitledBorder.LEFT, TitledBorder.TOP,
+                new Font("Segoe UI", Font.BOLD, 14)));
+        body.add(appointmentScrollPane, BorderLayout.NORTH);
+
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(Color.WHITE);
         form.setBorder(BorderFactory.createTitledBorder(
@@ -322,6 +342,9 @@ public class DoctorFrame extends javax.swing.JFrame {
         appointmentIdField = new JTextField(8);
         consultationPatientIdField = new JTextField(8);
         consultationDoctorIdField = new JTextField(defaultDoctorId(), 8);
+        makeReadOnly(appointmentIdField);
+        makeReadOnly(consultationPatientIdField);
+        makeReadOnly(consultationDoctorIdField);
         diagnosisArea = new JTextArea(3, 30);
         prescriptionArea = new JTextArea(3, 30);
         notesArea = new JTextArea(3, 30);
@@ -339,7 +362,8 @@ public class DoctorFrame extends javax.swing.JFrame {
         buttonGbc.anchor = GridBagConstraints.EAST;
         buttonGbc.insets = new Insets(12, 10, 5, 10);
         form.add(save, buttonGbc);
-        panel.add(form, BorderLayout.CENTER);
+        body.add(form, BorderLayout.CENTER);
+        panel.add(body, BorderLayout.CENTER);
         return panel;
     }
 
@@ -384,6 +408,12 @@ public class DoctorFrame extends javax.swing.JFrame {
         panel.add(component, fieldGbc);
     }
 
+    private void makeReadOnly(JTextField field) {
+        field.setEditable(false);
+        field.setFocusable(false);
+        field.setBackground(new Color(235, 235, 235));
+    }
+
     private void loadAppointments() {
         int doctorId;
         LocalDate date;
@@ -408,13 +438,8 @@ public class DoctorFrame extends javax.swing.JFrame {
             protected void done() {
                 try {
                     List<Appointment> appointments = get();
-                    DefaultTableModel model = (DefaultTableModel) appointmentTable.getModel();
-                    model.setRowCount(0);
-                    for (Appointment appointment : appointments) {
-                        model.addRow(new Object[] {appointment.getAppointmentId(), appointment.getPatientId(),
-                            appointment.getDoctorId(), appointment.getAppointmentDate(), appointment.getAppointmentTime(),
-                            appointment.getStatus(), appointment.getReason()});
-                    }
+                    loadAppointmentsIntoTable(appointmentTable, appointments);
+                    loadAppointmentsIntoTable(consultationAppointmentTable, appointments);
                     LOGGER.info("Doctor appointment load finished in UI. doctorId=" + requestedDoctorId
                             + ", date=" + requestedDate + ", rows=" + appointments.size() + ".");
                     clearBusy("Appointments loaded: " + appointments.size() + ".");
@@ -426,6 +451,19 @@ public class DoctorFrame extends javax.swing.JFrame {
                 }
             }
         }.execute();
+    }
+
+    private void loadAppointmentsIntoTable(JTable table, List<Appointment> appointments) {
+        if (table == null) {
+            return;
+        }
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        model.setRowCount(0);
+        for (Appointment appointment : appointments) {
+            model.addRow(new Object[] {appointment.getAppointmentId(), appointment.getPatientId(),
+                appointment.getDoctorId(), appointment.getAppointmentDate(), appointment.getAppointmentTime(),
+                appointment.getStatus(), appointment.getReason()});
+        }
     }
 
     private void loadHistory() {
@@ -548,18 +586,28 @@ public class DoctorFrame extends javax.swing.JFrame {
     }
 
     private void useSelectedAppointmentForConsultation() {
-        int selectedRow = appointmentTable.getSelectedRow();
+        fillConsultationFromSelectedAppointment(appointmentTable, true);
+    }
+
+    private void fillConsultationFromSelectedAppointment(JTable table, boolean showConsultationPage) {
+        if (table == null || appointmentIdField == null) {
+            return;
+        }
+        int selectedRow = table.getSelectedRow();
         if (selectedRow < 0) {
             return;
         }
-        int modelRow = appointmentTable.convertRowIndexToModel(selectedRow);
-        String appointmentId = valueAt(appointmentTable, modelRow, 0);
-        String patientId = valueAt(appointmentTable, modelRow, 1);
-        String doctorId = valueAt(appointmentTable, modelRow, 2);
+        int modelRow = table.convertRowIndexToModel(selectedRow);
+        String appointmentId = valueAt(table, modelRow, 0);
+        String patientId = valueAt(table, modelRow, 1);
+        String doctorId = valueAt(table, modelRow, 2);
         appointmentIdField.setText(appointmentId);
         consultationPatientIdField.setText(patientId);
         consultationDoctorIdField.setText(doctorId);
-        cardLayout.show(contentPanel, "consultation");
+        if (showConsultationPage) {
+            cardLayout.show(contentPanel, "consultation");
+            selectConsultationAppointmentById(appointmentId);
+        }
         setStatus("Selected appointment " + appointmentId + " for patient " + patientId + ".");
         LOGGER.info("Doctor appointment selected for consultation. appointmentId=" + appointmentId
                 + ", patientId=" + patientId + ", doctorId=" + doctorId + ".");
@@ -571,6 +619,19 @@ public class DoctorFrame extends javax.swing.JFrame {
             return;
         }
         useSelectedAppointmentForConsultation();
+    }
+
+    private void selectConsultationAppointmentById(String appointmentId) {
+        if (consultationAppointmentTable == null || appointmentId == null || appointmentId.trim().length() == 0) {
+            return;
+        }
+        DefaultTableModel model = (DefaultTableModel) consultationAppointmentTable.getModel();
+        for (int row = 0; row < model.getRowCount(); row++) {
+            if (appointmentId.equals(valueAt(consultationAppointmentTable, row, 0))) {
+                consultationAppointmentTable.setRowSelectionInterval(row, row);
+                return;
+            }
+        }
     }
 
     private String valueAt(JTable table, int row, int column) {
