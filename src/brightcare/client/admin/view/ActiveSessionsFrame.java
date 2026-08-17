@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import javax.swing.JOptionPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerDateModel;
 import javax.swing.table.DefaultTableModel;
@@ -28,6 +29,7 @@ public class ActiveSessionsFrame extends javax.swing.JFrame {
         refreshButton = new javax.swing.JButton();
         sessionsTabbedPane = new javax.swing.JTabbedPane();
         activePanel = new javax.swing.JPanel();
+        forceLogoutButton = new javax.swing.JButton();
         activeSessionsScrollPane = new javax.swing.JScrollPane();
         activeSessionsTable = new javax.swing.JTable();
         historyPanel = new javax.swing.JPanel();
@@ -45,6 +47,8 @@ public class ActiveSessionsFrame extends javax.swing.JFrame {
         titleLabel.setText("Sessions");
         refreshButton.setText("Refresh");
         refreshButton.addActionListener(this::refreshButtonActionPerformed);
+        forceLogoutButton.setText("Force Logout Selected");
+        forceLogoutButton.addActionListener(this::forceLogoutButtonActionPerformed);
 
         activeSessionsTable.setModel(new javax.swing.table.DefaultTableModel(
                 new Object [][] {},
@@ -115,13 +119,21 @@ public class ActiveSessionsFrame extends javax.swing.JFrame {
     private void buildActivePanel() {
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(activePanel);
         activePanel.setLayout(layout);
-        layout.setHorizontalGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(activeSessionsScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 740, Short.MAX_VALUE)
-                .addContainerGap());
+        layout.setHorizontalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(forceLogoutButton)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(activeSessionsScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 740,
+                                Short.MAX_VALUE)
+                        .addContainerGap()));
         layout.setVerticalGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(activeSessionsScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 360, Short.MAX_VALUE)
+                .addComponent(forceLogoutButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(activeSessionsScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 330, Short.MAX_VALUE)
                 .addContainerGap());
     }
 
@@ -172,6 +184,30 @@ public class ActiveSessionsFrame extends javax.swing.JFrame {
 
     private void showAllHistoryButtonActionPerformed(java.awt.event.ActionEvent evt) {
         loadHistory(null);
+    }
+
+    private void forceLogoutButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        int row = activeSessionsTable.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Select an active session first.");
+            return;
+        }
+        int modelRow = activeSessionsTable.convertRowIndexToModel(row);
+        String username = String.valueOf(activeSessionsTable.getModel().getValueAt(modelRow, 0));
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                "Force logout " + username + "?",
+                "Confirm Force Logout",
+                JOptionPane.YES_NO_OPTION
+        );
+        if (choice != JOptionPane.YES_OPTION) {
+            return;
+        }
+        boolean success = controller.forceLogout(username);
+        JOptionPane.showMessageDialog(this, success
+                ? "Session logged out."
+                : "Unable to logout selected session.");
+        loadSessions();
     }
 
     public AdminController getController() {
@@ -226,6 +262,7 @@ public class ActiveSessionsFrame extends javax.swing.JFrame {
     private javax.swing.JScrollPane activeSessionsScrollPane;
     private javax.swing.JTable activeSessionsTable;
     private javax.swing.JButton filterHistoryButton;
+    private javax.swing.JButton forceLogoutButton;
     private javax.swing.JLabel historyDateLabel;
     private javax.swing.JSpinner historyDateSpinner;
     private javax.swing.JPanel historyPanel;

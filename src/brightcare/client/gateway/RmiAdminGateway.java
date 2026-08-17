@@ -66,6 +66,24 @@ public class RmiAdminGateway implements AdminGateway {
         }
     }
 
+    public boolean forceLogout(String username) {
+        if (username == null || username.trim().length() == 0) {
+            return false;
+        }
+        try {
+            List<UserAccount> accounts = remote.viewUsers();
+            for (UserAccount account : accounts) {
+                if (account.getUsername() != null
+                        && account.getUsername().equalsIgnoreCase(username.trim())) {
+                    return remote.logout(account.getUserId());
+                }
+            }
+        } catch (RemoteException ex) {
+            return false;
+        }
+        return false;
+    }
+
     public Report generateMonthlyAppointmentReport(int month, int year) {
         try {
             return remote.generateMonthlyAppointmentReport(month, year);

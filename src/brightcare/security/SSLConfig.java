@@ -19,20 +19,87 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.rmi.ssl.SslRMIServerSocketFactory;
 
 public class SSLConfig {
+
+    // RMI SSL SETTINGS
+    // Controls whether RMI uses SSL/TLS.
+
+    // JVM property used to enable/disable SSL for RMI.
+    // Example: -Dbrightcare.rmi.ssl=true
     public static final String RMI_SSL_PROPERTY = "brightcare.rmi.ssl";
-    public static final String RMI_RELAXED_HOST_CHECK_PROPERTY = "brightcare.rmi.relaxedHostCheck";
-    public static final String SSL_DIRECTORY_PROPERTY = "brightcare.ssl.dir";
-    public static final String KEY_STORE_PROPERTY = "javax.net.ssl.keyStore";
-    public static final String KEY_STORE_PASSWORD_PROPERTY = "javax.net.ssl.keyStorePassword";
-    public static final String KEY_STORE_TYPE_PROPERTY = "javax.net.ssl.keyStoreType";
-    public static final String TRUST_STORE_PROPERTY = "javax.net.ssl.trustStore";
-    public static final String TRUST_STORE_PASSWORD_PROPERTY = "javax.net.ssl.trustStorePassword";
-    public static final String TRUST_STORE_TYPE_PROPERTY = "javax.net.ssl.trustStoreType";
-    public static final String DEFAULT_SSL_DIRECTORY = "config/ssl";
-    public static final String DEFAULT_KEY_STORE = "brightcare-rmi-keystore.p12";
-    public static final String DEFAULT_TRUST_STORE = "brightcare-rmi-truststore.p12";
-    public static final String DEFAULT_STORE_PASSWORD = "brightcare";
-    public static final String DEFAULT_STORE_TYPE = "PKCS12";
+
+    // JVM property controlling whether certificate hostname/IP checking
+    // is relaxed. Intended for development/testing.
+    public static final String RMI_RELAXED_HOST_CHECK_PROPERTY =
+            "brightcare.rmi.relaxedHostCheck";
+
+
+    // BRIGHTCARE SSL FILE LOCATION
+    // Controls where BrightCare looks for its SSL files.
+
+    // Optional JVM property for overriding the default SSL directory.
+    // Example: -Dbrightcare.ssl.dir=C:\BrightCare\ssl
+    public static final String SSL_DIRECTORY_PROPERTY =
+            "brightcare.ssl.dir";
+
+
+    // SERVER KEYSTORE SETTINGS
+    // The keystore contains the SERVER'S certificate/private key.
+    // Used by the server to prove its identity to clients.
+
+    // Java property containing the path to the server keystore.
+    public static final String KEY_STORE_PROPERTY =
+            "javax.net.ssl.keyStore";
+
+    // Java property containing the server keystore password.
+    public static final String KEY_STORE_PASSWORD_PROPERTY =
+            "javax.net.ssl.keyStorePassword";
+
+    // Java property specifying the keystore format, e.g. PKCS12.
+    public static final String KEY_STORE_TYPE_PROPERTY =
+            "javax.net.ssl.keyStoreType";
+
+
+    // CLIENT TRUSTSTORE SETTINGS
+    // The truststore contains certificates that the CLIENT trusts.
+    // Used by clients to verify the RMI server.
+
+    // Java property containing the path to the client truststore.
+    public static final String TRUST_STORE_PROPERTY =
+            "javax.net.ssl.trustStore";
+
+    // Java property containing the client truststore password.
+    public static final String TRUST_STORE_PASSWORD_PROPERTY =
+            "javax.net.ssl.trustStorePassword";
+
+    // Java property specifying the truststore format, e.g. PKCS12.
+    public static final String TRUST_STORE_TYPE_PROPERTY =
+            "javax.net.ssl.trustStoreType";
+
+
+    // DEFAULT BRIGHTCARE SSL VALUES
+    // Used automatically when no custom JVM properties are supplied.
+
+    // Default folder containing the SSL certificate stores.
+    public static final String DEFAULT_SSL_DIRECTORY =
+            "config/ssl";
+
+    // Default server keystore filename.
+    // Contains the server's certificate/private key.
+    public static final String DEFAULT_KEY_STORE =
+            "brightcare-rmi-keystore.p12";
+
+    // Default client truststore filename.
+    // Contains the certificate(s) trusted by the client.
+    public static final String DEFAULT_TRUST_STORE =
+            "brightcare-rmi-truststore.p12";
+
+    // Default password used to open the development keystore/truststore.
+    public static final String DEFAULT_STORE_PASSWORD =
+            "brightcare";
+
+    // File format used by both the keystore and truststore.
+    public static final String DEFAULT_STORE_TYPE =
+            "PKCS12";
 
     public void configureServer(String keyStorePath, String keyStorePassword) {
         requireText(keyStorePath, "Key store path");

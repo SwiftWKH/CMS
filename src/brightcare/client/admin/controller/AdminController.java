@@ -115,6 +115,10 @@ public class AdminController {
         return adminGateway.disableUser(username);
     }
 
+    public boolean forceLogout(String username) {
+        return adminGateway.forceLogout(username);
+    }
+
     public Report generateMonthlyAppointmentReport(int month, int year) {
         return adminGateway.generateMonthlyAppointmentReport(month, year);
     }

@@ -16,6 +16,8 @@ public interface AdminGateway {
 
     boolean disableUser(String username);
 
+    boolean forceLogout(String username);
+
     Report generateMonthlyAppointmentReport(int month, int year);
 
     Report generateDoctorConsultationReport(int doctorId, int month, int year);

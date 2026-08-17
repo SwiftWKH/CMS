@@ -28,6 +28,10 @@ public class UnavailableAdminGateway implements AdminGateway {
         return false;
     }
 
+    public boolean forceLogout(String username) {
+        return false;
+    }
+
     public Report generateMonthlyAppointmentReport(int month, int year) {
         return new Report(0, "MONTHLY_APPOINTMENT", 0, LocalDateTime.now(), null);
     }

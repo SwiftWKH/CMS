@@ -80,7 +80,7 @@ public class LoginController {
         UserAccount userAccount = authenticationGateway.login(username, password);
         if (userAccount == null) {
             LOGGER.warning("Login failed after gateway call for username=" + safeUsername(username) + ".");
-            return LoginResult.failure("Invalid username or password.");
+            return LoginResult.failure("Invalid username/password, inactive account, or account already logged in.");
         }
 
         LOGGER.info("Login successful for username=" + userAccount.getUsername()
